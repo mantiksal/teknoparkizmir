@@ -15,4 +15,4 @@ fi
 
 echo "Stand ekranı: $URL   (durdurmak için Ctrl+C)"
 ( sleep 1; open "$URL" 2>/dev/null ) &
-exec python3 -m http.server "$PORT" --bind 127.0.0.1
+exec python3 server.py "$PORT"

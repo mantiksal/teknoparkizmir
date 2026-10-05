@@ -1,7 +1,7 @@
 {
   "objects": [
-    { "file": "iyte-logo.png", "name": "İYTE logosu", "hero": true, "tint": 0.6, "replaces": "iyteLogo" },
-    { "file": "teknopark-izmir-logo.png", "name": "Teknopark İzmir logosu", "hero": true, "tint": 0.6, "replaces": "teknoparkLogo" },
-    { "file": "rektor-yusuf-baran.png", "name": "Rektör Prof. Dr. Yusuf Baran", "hero": true, "tint": 0.5 }
+    { "file": "../brand/iyte-logo.png", "name": "İYTE logosu", "hero": true, "tint": 0.12, "replaces": "iyteLogo" },
+    { "file": "../brand/teknopark-mark.png", "name": "Teknopark İzmir sembolü", "hero": true, "tint": 0.12, "replaces": "teknoparkLogo" },
+    { "file": "rektor-yusuf-baran.png", "name": "Rektör Prof. Dr. Yusuf Baran", "hero": true, "tint": 0.4 }
   ]
 }

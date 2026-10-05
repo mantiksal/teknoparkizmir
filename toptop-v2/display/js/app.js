@@ -1,13 +1,16 @@
 // Stand ekranı (2. monitör).
-// Akış: bekleme (QR + kamera) → karşılama → 5 sn fotoğraf → Teknopark hikâyesi
-// eşliğinde objelerin uçuşu ve portrenin oluşması → bitiş ekranı (15 sn) → bekleme.
+// Akış: bekleme (canlı obje aynası + QR) → karşılama → 5 sn fotoğraf → Teknopark
+// hikâyesi eşliğinde 3B objelerin uçuşu ve portrenin oluşması → bitiş (15 sn) → bekleme.
 import * as THREE from '../vendor/three/three.module.js';
+import { RoomEnvironment } from '../vendor/three/addons/RoomEnvironment.js';
 import { builtinSprites, loadCustomSprites } from './objects.js';
-import { AnamorphScene, analyzeTarget, textTarget } from './anamorph.js';
-import { preparePortrait, HeadTracker } from './vision.js';
+import { ObjectLibrary, setupLighting } from './objects3d.js';
+import { AnamorphScene, analyzeTarget } from './anamorph.js';
+import { MirrorWall } from './mirror.js';
+import { preparePortrait, fallbackPortrait, HeadTracker } from './vision.js';
 import { ARCHETYPES, ORDER } from '../../quiz/quiz-data.js';
 import { decodeToken } from '../../quiz/token.js';
-import { CONFIG, BRAND } from '../config.js';
+import { CONFIG } from '../config.js';
 import { SCENES, SOURCE_NOTE, ASSEMBLE, ALIGN_AT } from './story.js';
 import { CameraPath } from './camera-path.js';
 import { QRScanner } from './scanner.js';
@@ -17,18 +20,22 @@ const $ = (id) => document.getElementById(id);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const ease = (t) => t * t * (3 - 2 * t);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('zaman aşımı')), ms))]);
 
 // ------------------------------------------------------------------ sahne
 
 const canvas = $('gl');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setClearColor(0x000000, 0);
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0d0f12);
-scene.fog = new THREE.Fog(0x0d0f12, 1e5, 2e5);
+scene.fog = new THREE.Fog(0x141619, 1e5, 2e5);
 const camera = new THREE.PerspectiveCamera(40, 1, 1, 6000);
-const ana = new AnamorphScene(scene);
-ana.setOptions({ backs: true, wires: false });
+setupLighting(renderer, scene, RoomEnvironment);
+const library = new ObjectLibrary();
+const ana = new AnamorphScene(scene, library);
+ana.setOptions({ backs: false, wires: false });
+const mirror = new MirrorWall(scene, library);
 
 // Sanal perde: yükseklik H=100 birim; sihirli nokta perdenin tam karşısında.
 const H = 100, EZ = 160;
@@ -36,27 +43,39 @@ const E = new THREE.Vector3(0, 0, EZ);
 const FINAL_FOV = 2 * Math.atan(H / 2 / EZ) * 180 / Math.PI;
 let W = H, vertical = true;
 
+/** CSS piksel dikdörtgeni → z=0 düzleminde dünya dikdörtgeni. */
+function pxToWorld(left, top, width, height) {
+  const k = H / innerHeight;
+  return { x: (left + width / 2 - innerWidth / 2) * k, y: (innerHeight / 2 - top - height / 2) * k, w: width * k, h: height * k };
+}
+
+function layoutMirror() {
+  const u = Math.min(innerWidth / 100, innerHeight * 0.005625);
+  let r;
+  if (vertical) r = { left: 5 * u, top: 66 * u, width: innerWidth - 10 * u, height: 58 * u };
+  else r = { left: innerWidth * 0.04, top: innerHeight * 0.1, width: innerWidth * 0.44, height: innerHeight * 0.8 };
+  Object.assign($('mirrorFrame').style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+  const pw = r.width * 0.4;
+  promoSlots.idle = { left: r.left + 2.5 * u, top: r.top + r.height - pw * 9 / 16 - 2.5 * u, width: pw };
+  promoSlots.show = vertical ? { left: innerWidth - 40 * u, top: 4.5 * u, width: 36 * u }
+    : { left: innerWidth * 0.74, top: innerHeight * 0.05, width: innerWidth * 0.22 };
+  placePromo();
+  mirror.build(sprites, pxToWorld(r.left, r.top, r.width, r.height), vertical ? 34 : 36);
+}
+
 function resize() {
   renderer.setSize(innerWidth, innerHeight, false);
   camera.aspect = innerWidth / innerHeight;
   W = H * camera.aspect;
   vertical = camera.aspect < 1;
+  if (sprites.length) layoutMirror();
 }
-addEventListener('resize', () => { resize(); if (state === 'idle') idle.next = 0; });
+let resizeT;
+addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(resize, 200); });
 
 /** Ekran yönüne göre portrenin yeri: dikeyde ortada, yatayda solda. */
-function portraitLayout(kind) {
-  if (vertical) return kind === 'idle' ? { portraitH: H * 0.3, portraitY: H * 0.12, portraitX: 0 } : { portraitH: H * 0.46, portraitY: H * 0.03, portraitX: 0 };
-  return kind === 'idle' ? { portraitH: H * 0.55, portraitY: 0, portraitX: -W * 0.24 } : { portraitH: H * 0.86, portraitY: 0, portraitX: -W * 0.22 };
-}
-
-function buildCloud(analysis, archetype, kind, seed) {
-  const a = ARCHETYPES[archetype];
-  ana.build(analysis, sprites, {
-    screenW: W, screenH: H, sMin: 0.5, sMax: 2.3, decoyRatio: kind === 'idle' ? 0.12 : 0.18, heroRatio: 0.006,
-    seed, archetype, archColor: a?.color, ...portraitLayout(kind),
-  });
-  ana.setChoreography(archetype || 'swirl');
+function portraitLayout() {
+  return vertical ? { portraitH: H * 0.44, portraitY: H * 0.07, portraitX: 0 } : { portraitH: H * 0.86, portraitY: 0, portraitX: -W * 0.22 };
 }
 
 function setCamera({ pos, target, fov, aligned }) {
@@ -81,13 +100,12 @@ async function startCamera() {
   });
   for (const v of [scanVideo, camSmall, camBig]) { v.srcObject = stream; v.play().catch(() => {}); }
   await scanner.init();
-  $('camMsg').textContent = 'Sonuç QR\'ını bu kameraya göster';
 }
 
 const recentTokens = new Map();   // token → zaman (aynı QR'ı tekrar tetikleme)
 async function scanLoop() {
   while (true) {
-    await sleep(220);
+    await sleep(200);
     if (state !== 'idle' || !stream) continue;
     const text = await scanner.scan();
     if (!text) continue;
@@ -96,7 +114,6 @@ async function scanLoop() {
     const last = recentTokens.get(text);
     if (last && performance.now() - last < CONFIG.sameTokenCooldown * 1000) continue;
     recentTokens.set(text, performance.now());
-    $('camBadge').classList.add('hit');
     start(data);
   }
 }
@@ -105,58 +122,80 @@ function drawQR(el, text, cellPx = 8) {
   const qr = window.qrcode(0, 'M');
   qr.addData(text, 'Byte');
   qr.make();
-  const n = qr.getModuleCount(), q = 2;
+  const n = qr.getModuleCount(), q = 1;
   const c = document.createElement('canvas');
   c.width = c.height = (n + q * 2) * cellPx;
   const g = c.getContext('2d');
   g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
-  g.fillStyle = '#000';
+  g.fillStyle = '#111';
   for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (qr.isDark(r, k)) g.fillRect((k + q) * cellPx, (r + q) * cellPx, cellPx, cellPx);
   el.replaceChildren(c);
 }
 
+// ------------------------------------------------------------------ tanıtım videosu
+
+const promo = $('promo'), promoVideo = $('promoVideo');
+const promoSlots = { idle: null, show: null };
+for (const ev of ['playing', 'canplay', 'seeked']) promoVideo.addEventListener(ev, () => placePromo());
+let promoSlot = 'idle', promoVisible = false;
+
+function placePromo() {
+  const s = promoSlots[promoSlot];
+  if (!s) return;
+  Object.assign(promo.style, { left: s.left + 'px', top: s.top + 'px', width: s.width + 'px' });
+  promo.classList.toggle('on', promoVisible && promoVideo.readyState >= 2);
+}
+function setPromo(slot, visible) {
+  if (slot === promoSlot && visible === promoVisible) return;
+  promoSlot = slot; promoVisible = visible; placePromo();
+}
+
+async function startPromo() {
+  const list = CONFIG.promoVideo || [];
+  for (const src of list) {
+    const ok = await new Promise((res) => {
+      promoVideo.onloadedmetadata = () => res(true);
+      promoVideo.onerror = () => res(false);
+      promoVideo.src = src;
+    });
+    if (!ok) continue;
+    // Her açılışta farklı bir yerden başla.
+    promoVideo.currentTime = Math.random() * Math.max(0, promoVideo.duration - 5);
+    promoVideo.play().catch(() => {});
+    return;
+  }
+}
+
 // ------------------------------------------------------------------ durumlar
 
-let state = 'boot';
+let state = 'boot', stateSince = 0;
+function setState(s) { state = s; stateSince = performance.now() / 1000; }
 let sprites = [];
-const layers = ['idle', 'greet', 'capture', 'caption', 'end'];
+const layers = ['idle', 'greet', 'capture', 'proc', 'caption', 'end'];
 function showLayer(...on) { for (const id of layers) $(id).classList.toggle('on', on.includes(id)); }
 
-// Bekleme: arketip isimleri sırayla kendi koreografileriyle objelerden oluşur.
-const idle = { i: -1, t0: 0, next: 0, cache: new Map() };
-const IDLE_CYCLE = 10;
-
-function idleTarget(key) {
-  if (!idle.cache.has(key)) {
-    const a = ARCHETYPES[key];
-    const t = textTarget([{ text: a.emoji, size: 230 }, { text: a.name, size: 96 }], 1.25, [a.color, '#ffffff', a.color]);
-    idle.cache.set(key, analyzeTarget(t, 700));
-  }
-  return idle.cache.get(key);
-}
+// Ayna geçişi: 0 = yerinde, 1 = dağılmış
+const burst = { from: 0, to: 0, t0: 0, dur: 1 };
+function burstTo(to, dur) { Object.assign(burst, { from: mirror.burst, to, t0: performance.now() / 1000, dur }); }
 
 function enterIdle() {
-  state = 'idle';
-  idle.next = 0;
+  setState('idle');
+  session = null;
   scene.fog.near = 1e5; scene.fog.far = 2e5;
-  $('camBadge').classList.remove('hit');
+  ana.group.visible = false;
+  mirror.visible = true;
+  burstTo(0, 1.4);
+  $('mirrorFrame').classList.remove('hit');
   showLayer('idle');
+  setPromo('idle', true);
 }
 
-function updateIdle(now) {
-  if (now >= idle.next) {
-    idle.i = (idle.i + 1) % ORDER.length;
-    const key = ORDER[idle.i];
-    buildCloud(idleTarget(key), key, 'idle', 1000 + idle.i);
-    idle.t0 = now; idle.next = now + IDLE_CYCLE;
-  }
-  const t = now - idle.t0;
-  const prog = clamp(t / 4.5, 0, 1);
-  // Toplanırken hafif salınan kamera; sonra tam hizada durur.
-  const sway = 1 - ease(clamp((t - 3) / 2, 0, 1));
-  const pos = E.clone().add(new THREE.Vector3(Math.sin(t * 0.7) * 22 * sway, Math.sin(t * 0.5) * 8 * sway, 30 * sway));
-  setCamera({ pos, target: new THREE.Vector3(pos.x * 0.6, pos.y * 0.6, -1000), fov: FINAL_FOV, aligned: sway < 0.01 });
-  ana.layout(E, prog);
+function updateIdleLike(now) {
+  setCamera({ pos: E, fov: FINAL_FOV, aligned: true });
+  const k = clamp((now - burst.t0) / burst.dur, 0, 1);
+  mirror.burst = burst.from + (burst.to - burst.from) * ease(k);
+  if (mirror.visible) mirror.update(scanVideo, now);
+  if (mirror.burst > 0.98 && burst.to === 1) mirror.visible = false;
 }
 
 // ------------------------------------------------------------------ deneyim
@@ -166,122 +205,166 @@ let session = null;
 async function start(data) {
   if (state !== 'idle') return;
   const a = ARCHETYPES[data.archetype];
-  session = { ...data, arch: a, key: data.archetype };
+  const s = session = { ...data, arch: a, key: data.archetype };
   document.documentElement.style.setProperty('--arch', a.color);
+  $('mirrorFrame').classList.add('hit');
 
-  // 1) Karşılama
-  state = 'greet';
-  $('gName').textContent = data.name || 'girişimci';
+  // 1) Karşılama — video köşeye kayar
+  setPromo('show', true);
+  setState('greet');
+  $('gName').textContent = (data.name || 'Girişimci') + '!';
   showLayer('greet');
   await sleep(CONFIG.greet * 1000);
+  if (session !== s) return;
 
   // 2) Fotoğraf
-  state = 'capture';
+  setState('capture');
   showLayer('capture');
+  burstTo(1, 0.9);
   const shot = await capturePhoto();
+  if (session !== s) return;
 
-  // 3) Portreyi hazırla (bu sırada kısa bir geçiş)
-  state = 'processing';
-  $('cMsg').textContent = 'Harika! ✨';
-  $('cCount').textContent = '';
-  let analysis;
+  // 3) Portreyi hazırla. Takılırsa 6 sn sonra yedek kırpmayla devam et.
+  setState('processing');
+  showLayer('proc');
+  let target;
   try {
-    const p = await preparePortrait(shot, { mirror: true });
-    analysis = analyzeTarget(p, 1300);
+    target = await withTimeout(preparePortrait(shot, { mirror: true }), 6000);
   } catch (e) {
-    console.error('Portre hazırlanamadı', e);
-    analysis = idleTarget(data.archetype);
+    console.warn('Portre işleme başarısız, yedek kırpma kullanılıyor:', e.message);
+    target = fallbackPortrait(shot, { mirror: true });
   }
-  buildCloud(analysis, data.archetype, 'show', (Math.random() * 1e9) | 0);
+  if (session !== s) return;
+  let analysis;
+  try { analysis = analyzeTarget(target, 1200); } catch (e) {
+    console.error(e); analysis = analyzeTarget(fallbackPortrait(shot, { mirror: true }), 1200);
+  }
+  ana.build(analysis, sprites, {
+    screenW: W, screenH: H, sMin: 0.5, sMax: 2.3, decoyRatio: 0.16, heroRatio: 0.006,
+    seed: (Math.random() * 1e9) | 0, archetype: data.archetype, archColor: a.color, ...portraitLayout(),
+  });
+  ana.setChoreography(data.archetype);
+  ana.group.visible = true;
+  mirror.visible = false;
 
   // 4) Gösteri
   const C = new THREE.Vector3(ana.portrait.x, ana.portrait.y, 0).sub(E).multiplyScalar(1.4).add(E);
-  session.path = new CameraPath(data.archetype, E, C, H, ALIGN_AT, FINAL_FOV);
-  session.t0 = performance.now() / 1000;
-  session.scene = -1;
-  state = 'show';
+  s.path = new CameraPath(data.archetype, E, C, H, ALIGN_AT, FINAL_FOV);
+  s.t0 = performance.now() / 1000;
+  s.scene = -1;
+  $('capDots').innerHTML = SCENES.map(() => '<i></i>').join('');
+  setState('show');
   showLayer('caption');
 }
 
 async function capturePhoto() {
+  const ring = $('cRing');
+  const setRing = (f) => { ring.style.strokeDashoffset = String(289 * (1 - f)); };
   if (window.__testPhoto) {          // otomatik test için
-    for (let n = CONFIG.countdown; n > 0; n--) { $('cCount').textContent = n; await sleep(200); }
+    for (let n = CONFIG.countdown; n > 0; n--) { $('cCount').textContent = n; setRing(1 - (n - 1) / CONFIG.countdown); await sleep(150); }
     return window.__testPhoto;
   }
   let faceAt = -1;
   const check = setInterval(() => {
-    const p = faceTracker.detect(camBig, 60);
+    const p = faceTracker.detect(scanVideo, 60);
     if (p) faceAt = performance.now();
     if (p !== undefined) $('capture').classList.toggle('face', performance.now() - faceAt < 400);
   }, 100);
-  $('cMsg').textContent = 'Yüzünü çerçeveye getir';
-  for (let n = CONFIG.countdown; n > 0; n--) { $('cCount').textContent = n; await sleep(1000); }
-  // Yüz yoksa birkaç saniye daha bekle.
-  const until = performance.now() + 4000;
+  $('cMsg').textContent = 'Gülümse! 😄';
+  const total = CONFIG.countdown * 1000, t0 = performance.now();
+  while (performance.now() - t0 < total) {
+    const left = total - (performance.now() - t0);
+    $('cCount').textContent = Math.ceil(left / 1000);
+    setRing(1 - left / total);
+    await sleep(50);
+  }
+  // Yüz görünmüyorsa birkaç saniye daha bekle.
+  const until = performance.now() + 3000;
   while (performance.now() - faceAt > 500 && performance.now() < until) {
-    $('cCount').textContent = ''; $('cMsg').textContent = 'Seni göremiyorum, çerçeveye yaklaş 🙂';
-    await sleep(150);
+    $('cCount').textContent = '🙂'; $('cMsg').textContent = 'Seni göremiyorum, çerçeveye gel';
+    await sleep(120);
   }
   clearInterval(check);
   $('cCount').textContent = '';
+  const v = scanVideo;
   const c = document.createElement('canvas');
-  c.width = camBig.videoWidth; c.height = camBig.videoHeight;
-  c.getContext('2d').drawImage(camBig, 0, 0);
-  flash();
+  c.width = v.videoWidth || 1280; c.height = v.videoHeight || 720;
+  c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+  flash(1);
   return c;
 }
 
-function flash() {
+function flash(strength = 1, dur = 0.8) {
   const f = $('flash');
-  f.style.transition = 'none'; f.style.opacity = 1;
-  requestAnimationFrame(() => requestAnimationFrame(() => { f.style.transition = 'opacity .8s'; f.style.opacity = 0; }));
+  f.style.transition = 'none'; f.style.opacity = strength;
+  requestAnimationFrame(() => requestAnimationFrame(() => { f.style.transition = `opacity ${dur}s`; f.style.opacity = 0; }));
+}
+
+/** Başlıktaki sayıları 0'dan sayarak yaz (ör. "237 firma"). */
+function setTitle(el, text) {
+  const parts = text.split(/(\d[\d.,]*)/);
+  el.innerHTML = parts.map((p, i) => (i % 2 ? `<span class="num" data-v="${p}">0</span>` : p.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])))).join('');
+  const nums = [...el.querySelectorAll('.num')];
+  const t0 = performance.now();
+  const tick = () => {
+    const k = ease(clamp((performance.now() - t0) / 1100, 0, 1));
+    for (const n of nums) {
+      const raw = n.dataset.v;
+      if (k >= 1) { n.textContent = raw; continue; }
+      const [intPart] = raw.split(',');
+      const v = Math.round(+intPart.replace(/\./g, '') * k);
+      n.textContent = intPart.includes('.') ? v.toLocaleString('tr-TR') : String(v);
+    }
+    if (k < 1) requestAnimationFrame(tick);
+  };
+  tick();
 }
 
 function updateShow(now) {
-  const t = now - session.t0;
+  const s = session;
+  const t = now - s.t0;
   const prog = clamp((t - ASSEMBLE.t0) / (ASSEMBLE.t1 - ASSEMBLE.t0), 0, 1);
-  const cam = session.path.sample(t);
+  const cam = s.path.sample(t);
   setCamera(cam);
-  ana.layout(E, prog < 1 ? prog : 1);
+  // Objeler havada süzülür; hizalanmadan önce sakinleşip durur.
+  const wobble = 1 - ease(clamp((t - (ALIGN_AT - 6)) / 5, 0, 1));
+  ana.layout(E, prog, wobble * 0.6, t);
 
   // Uçuşta derinlik sisi; hizalanırken kalkar ki portrenin renkleri doğru görünsün.
   const fogK = 1 - ease(clamp((t - (ALIGN_AT - 4)) / 3.5, 0, 1));
   scene.fog.near = 200 + (1 - fogK) * 1e5;
   scene.fog.far = 700 + (1 - fogK) * 2e5;
 
-  // Hikâye yazıları
-  const idx = SCENES.findIndex((s) => t >= s.t0 && t < s.t1);
-  if (idx !== session.scene) {
-    session.scene = idx;
+  const idx = SCENES.findIndex((sc) => t >= sc.t0 && t < sc.t1);
+  if (idx !== s.scene) {
+    s.scene = idx;
     const cap = $('caption');
     cap.classList.remove('show');
+    [...$('capDots').children].forEach((d, i) => d.classList.toggle('on', i === idx));
     if (idx >= 0) {
-      const s = SCENES[idx];
-      const fill = (x) => x.replace('{name}', session.name || 'sen');
+      const sc = SCENES[idx];
+      const fill = (x) => x.replace('{name}', s.name || 'sen');
       setTimeout(() => {
-        $('capKicker').textContent = fill(s.kicker);
-        $('capTitle').textContent = fill(s.title);
-        $('capSrc').textContent = s.source ? SOURCE_NOTE : '';
+        if (session !== s) return;
+        $('capKicker').textContent = fill(sc.kicker);
+        setTitle($('capTitle'), fill(sc.title));
+        $('capSrc').textContent = sc.source ? SOURCE_NOTE : '';
         cap.classList.add('show');
-      }, 250);
+      }, 280);
     }
   }
-  if (cam.aligned && !session.flashed) { session.flashed = true; flashSoft(); }
+  // Portre oluşmadan önce video söner: doruk anı dikkat bölünmeden izlensin.
+  if (t > ALIGN_AT - 6) setPromo('show', false);
+  if (cam.aligned && !s.flashed) { s.flashed = true; flash(0.55, 1.4); }
   if (t >= CONFIG.show) enterEnd();
 }
 
-function flashSoft() {
-  const f = $('flash');
-  f.style.transition = 'none'; f.style.opacity = 0.35;
-  requestAnimationFrame(() => requestAnimationFrame(() => { f.style.transition = 'opacity 1.2s'; f.style.opacity = 0; }));
-}
-
 function enterEnd() {
-  state = 'end';
+  setState('end');
   const s = session, a = s.arch;
   $('eArch').textContent = `${a.emoji} ${a.name}`;
   $('eWho').textContent = `girişimcisi ${s.name}`;
-  $('eInvite').innerHTML = `Seni <span>${CONFIG.academy.title}</span>'ne bekliyoruz, ${escapeHtml(s.name)}!`;
+  $('eInvite').innerHTML = `Seni <span style="color:var(--green)">${CONFIG.academy.title}</span>'ne bekliyoruz, ${escapeHtml(s.name)}!`;
   $('eNote').textContent = CONFIG.academy.note;
   $('eQr').textContent = '…';
   $('eShareT').textContent = 'Portreni Instagram\'da paylaş';
@@ -298,7 +381,7 @@ async function prepareShare(shot) {
   const s = session;
   try {
     const card = composeCard(shot, { name: s.name, arch: s.arch });
-    const url = s.consent ? await uploadCard(card, { name: s.name, key: s.key }) : null;
+    const url = s.consent ? await withTimeout(uploadCard(card, { name: s.name, key: s.key }), 8000) : null;
     if (s !== session) return;
     if (url) {
       drawQR($('eQr'), url, 6);
@@ -310,7 +393,7 @@ async function prepareShare(shot) {
   }
   if (s !== session) return;
   drawQR($('eQr'), CONFIG.quizUrl, 6);
-  $('eShareT').textContent = 'Arkadaşlarını da teste davet et';
+  $('eShareT').textContent = 'Arkadaşlarını da teste davet et!';
   $('eShareS').textContent = `Bizi takip et: ${CONFIG.academy.instagram}`;
 }
 
@@ -318,8 +401,9 @@ const escapeHtml = (x) => String(x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', 
 
 function updateEnd(now) {
   setCamera({ pos: E, fov: FINAL_FOV, aligned: true });
-  ana.layout(E, 1);
-  if (now >= session.endAt) { session = null; enterIdle(); }
+  // Bitişte portre çok hafif nefes alır gibi kıpırdar
+  ana.layout(E, 1, 0.025 * (1 + Math.sin(now * 1.3)), now);
+  if (now >= session.endAt) enterIdle();
 }
 
 // ------------------------------------------------------------------ döngü
@@ -327,9 +411,19 @@ function updateEnd(now) {
 let fps = 0, fpsN = 0, fpsT = 0;
 function frame(ms) {
   const now = ms / 1000;
-  if (state === 'idle') updateIdle(now);
-  else if (state === 'show') updateShow(now);
-  else if (state === 'end') updateEnd(now);
+  try {
+    if (state === 'show') updateShow(now);
+    else if (state === 'end') updateEnd(now);
+    else updateIdleLike(now);
+    // Bekçi: herhangi bir hazırlık aşaması takılırsa bekleme ekranına dön.
+    if (['greet', 'capture', 'processing'].includes(state) && now - stateSince > 25) {
+      console.warn('Bekçi: takılan aşama sıfırlandı:', state);
+      enterIdle();
+    }
+  } catch (e) {
+    console.error('Kare hatası', e);
+    if (state !== 'idle') enterIdle();
+  }
   renderer.render(scene, camera);
   if (session?.needShot) {
     // Çizimden hemen sonra kopyala (WebGL tamponu bir sonraki karede temizlenir).
@@ -342,12 +436,12 @@ function frame(ms) {
   fpsN++;
   if (now - fpsT > 0.5) {
     fps = fpsN / (now - fpsT); fpsN = 0; fpsT = now;
-    $('debug').textContent = `durum: ${state}\nfps: ${fps.toFixed(0)}\nobje: ${ana.count}\nQR: ${scanner.engine || '-'}`;
+    $('debug').textContent = `durum: ${state}\nfps: ${fps.toFixed(0)}\nobje: ${ana.count} · ayna: ${mirror.cols}×${mirror.rows}\nQR: ${scanner.engine || '-'}`;
   }
   requestAnimationFrame(frame);
 }
 
-// ------------------------------------------------------------------ test kısayolları
+// ------------------------------------------------------------------ kısayollar
 
 addEventListener('keydown', (e) => {
   if (e.key === 'd' || e.key === 'D') document.body.classList.toggle('debug');
@@ -356,28 +450,29 @@ addEventListener('keydown', (e) => {
     // Telefon olmadan deneme: rastgele arketiple başlat.
     const key = ORDER[Math.floor(Math.random() * ORDER.length)];
     start({ name: 'Deneme', archetype: key, consent: false });
-  } else if (e.key === 'Escape' && state !== 'idle') { session = null; enterIdle(); }
+  } else if (e.key === 'Escape' && state !== 'idle') enterIdle();
 });
 window.__start = start;   // otomatik test için
-window.__dbg = { ana, camera, E, get state() { return state; } };
+window.__dbg = { ana, mirror, camera, E, get state() { return state; } };
 
 // ------------------------------------------------------------------ başlat
 
 (async function init() {
-  resize();
-  drawQR($('idleQr'), CONFIG.quizUrl, 8);
   const r = await loadCustomSprites(builtinSprites());
   sprites = r.sprites;
+  resize();
+  drawQR($('idleQr'), CONFIG.quizUrl, 8);
   enterIdle();
   requestAnimationFrame(frame);
+  startPromo();
   try {
     await startCamera();
     await faceTracker.setMode('face');
   } catch (e) {
     console.error(e);
-    $('camMsg').textContent = 'Kamera açılamadı: ' + e.message;
+    $('mirrorFrame').querySelector('span').textContent = 'Kamera açılamadı: ' + e.message;
   }
   scanLoop();
   // Modelleri ısıt: ilk katılımcıda bekleme olmasın.
-  try { const c = document.createElement('canvas'); c.width = c.height = 64; await preparePortrait(c); } catch {}
+  try { const c = document.createElement('canvas'); c.width = 640; c.height = 480; await withTimeout(preparePortrait(c), 15000); } catch {}
 })();

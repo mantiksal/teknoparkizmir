@@ -1,2 +1,4 @@
 # Yerel test görselleri (gerçek kişi fotoğrafı) — commit edilmez
 __test/
+# Tanıtım videosu büyük (>100 MB sınırı) — repoya girmez; README: Tanıtım videosu
+*.mp4

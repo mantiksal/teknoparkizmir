@@ -14,6 +14,10 @@ export const CONFIG = {
     instagram: '@teknoparkizmir',
   },
 
+  // Tanıtım videosu: sessiz, döngüde, her açılışta rastgele bir saniyeden başlar.
+  // İlk dosya yoksa ikincisi denenir. null yaparsanız video gösterilmez.
+  promoVideo: ['media/iyte-tanitim-540p.mp4', '../iyte-tanitim.mp4'],
+
   // Süreler (saniye)
   greet: 4,
   countdown: 5,

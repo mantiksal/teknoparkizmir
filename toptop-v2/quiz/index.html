@@ -9,7 +9,7 @@
 <style>
   :root {
     --bg: #0d0f12; --card: #171a1f; --line: #2b3036; --text: #f3f3f8; --muted: #a0a0b4;
-    --accent: #80CD36; --accent-2: #FFEF3B; --arch: var(--accent);
+    --accent: #74BC20; --accent-2: #80CD36; --blue: #5C8CC8; --orange: #EC7C00; --arch: var(--accent);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text);
@@ -17,12 +17,12 @@
   body { padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
   main { max-width: 560px; margin: 0 auto; padding: 20px 18px 40px; }
   header { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 13px; margin-bottom: 18px; }
-  header b { color: var(--text); letter-spacing: .02em; }
+  header .lg-tp { height: 54px; } header .lg-iy { height: 46px; }
   .screen { display: none; }
   .screen.on { display: block; animation: in .3s ease; }
   @keyframes in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-  h1 { font-size: 38px; line-height: 1.05; margin: 8px 0 14px; letter-spacing: -.02em; }
-  h1 span { background: linear-gradient(90deg, var(--accent-2), var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  h1 { font-size: 42px; font-weight: 900; line-height: 1.05; margin: 8px 0 14px; letter-spacing: -.02em; }
+  h1 span { background: linear-gradient(90deg, var(--accent-2), var(--blue) 55%, var(--orange)); -webkit-background-clip: text; background-clip: text; color: transparent; }
   h2 { font-size: 22px; line-height: 1.3; margin: 0 0 18px; }
   p { margin: 0 0 16px; }
   .muted { color: var(--muted); }
@@ -38,7 +38,7 @@
   .btn:disabled { opacity: .35; }
   .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); font-weight: 500; margin-top: 10px; }
   .progress { height: 5px; background: var(--line); border-radius: 3px; overflow: hidden; margin-bottom: 14px; }
-  .progress > div { height: 100%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .3s; }
+  .progress > div { height: 100%; background: linear-gradient(90deg, var(--accent-2), var(--blue) 55%, var(--orange)); transition: width .3s; }
   .qmeta { display: flex; justify-content: space-between; color: var(--muted); font-size: 14px; margin-bottom: 8px; }
   .qmeta button { background: none; border: 0; color: var(--muted); font: inherit; padding: 0; }
   .answers { display: grid; gap: 10px; }
@@ -66,7 +66,7 @@
 </head>
 <body>
 <main>
-  <header><b style="color:var(--accent)">TEKNOPARK İZMİR</b><span>Teknogirişim</span></header>
+  <header><img src="assets/teknopark-logo-light.png" alt="Teknopark İzmir" class="lg-tp"><img src="assets/iyte-logo.png" alt="İYTE" class="lg-iy"></header>
 
   <section class="screen on" id="sStart">
     <div class="emojis">🔥⛰️🧭🗺️🛠️</div>

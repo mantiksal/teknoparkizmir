@@ -19,6 +19,8 @@ herkes aynı anı birlikte görüyor.
 cd ~/projects/teknoparkizmir/toptop-v2 && ./start.sh
 ```
 
+`start.sh`, video için Range desteği olan küçük bir yerel sunucu (`server.py`) başlatır.
+
 - Stand ekranı açılır: http://localhost:8001/display/ . Tarayıcıda `F` ile tam ekran yapın.
   Kamera izni isterse verin.
 - Monitör dikey (9:16) kullanılacak şekilde tasarlandı; yatay ekranda da çalışır.
@@ -33,18 +35,41 @@ cd ~/projects/teknoparkizmir/toptop-v2 && ./start.sh
 | `Esc` | Bekleme ekranına dön |
 | `D` | Hata ayıklama bilgisi (fps, durum, QR motoru) |
 
+## Görsel kimlik
+
+- Logolar teknoparkizmir.com.tr'deki resmi dosyalardan (`.ai`/`.pdf`) üretildi: `display/assets/brand/`.
+  Koyu zeminde okunsun diye Teknopark logosunun yazısı açık renge çevrildi (`teknopark-logo-light.png`).
+- Renkler Teknopark logosundan: yeşil `#74BC20`, mavi `#5C8CC8`, turuncu `#EC7C00`, gri `#586470`.
+- Objeler gerçek 3B: her çizimin silüeti kalınlık ve yuvarlatılmış kenarla kabartılır (`display/js/objects3d.js`).
+  Işık ve yansımalar sahnede. İYTE mührü ve Teknopark sembolü de 3B "kahraman" obje olarak uçar.
+
+## Tanıtım videosu
+
+`iyte-tanitim.mp4` bekleme ekranında aynanın köşesinde, deneyim sırasında sağ üst köşede sessiz ve döngüde oynar.
+Her açılışta rastgele bir saniyeden başlar. Portre oluşmadan ~6 sn önce söner; doruk anı ve bitiş ekranı videosuz izlenir.
+
+- Ekran hafif kopyayı kullanır: `display/media/iyte-tanitim-540p.mp4`. Yoksa kök dizindeki orijinal dosya denenir.
+- Videolar büyük olduğu için (318 MB) **repoya girmez** (`.gitignore`). Stand bilgisayarına elle kopyalayın.
+- Hafif kopyayı yeniden üretmek için:
+  `avconvert --source iyte-tanitim.mp4 --preset Preset960x540 --output display/media/iyte-tanitim-540p.mp4 --replace`
+- Videoyu kapatmak için `display/config.js` içinde `promoVideo: null`.
+
 ## Akış ve süreler
 
 Süreler `display/config.js` içinde ayarlanır:
 
 1. **Bekleme:**
-   - Ekranda testin QR'ı ve 3 adımlık talimat var.
-   - Arka planda beş arketip sırayla kendi koreografileriyle objelerden oluşur.
+   - Dev başlık, testin QR'ı ve 3 adımlık talimat var.
+   - Ortada **canlı obje aynası** var: kamera görüntüsü gerçek zamanlı olarak 3B objelerden oluşan
+     bir mozaiğe dönüşür. Köşedeki gerçek kamera penceresi QR'ı hedeflemek için kullanılır.
    - Kamera sürekli sonuç QR'ı arar. Aynı QR 2 dakika içinde tekrar okutulursa yok sayılır.
+   - QR okununca ayna objeleri dağılarak deneyime geçilir.
 2. **Karşılama (4 sn):** "Merhaba Yusuf! 👋"
 3. **Fotoğraf (5 sn):**
-   - Sayım sırasında ekranda yüz çerçevesi görünür.
-   - Yüz bulunamazsa 4 saniye daha bekler.
+   - Dairesel bir geri sayım ve yüz çerçevesi görünür. Yüz bulununca çerçeve yeşile döner.
+   - Yüz bulunamazsa 3 saniye daha bekler.
+   - Görüntü işleme 6 saniyede bitmezse, deneyim MediaPipe'sız yedek kırpmayla devam eder.
+   - Herhangi bir hazırlık aşaması 25 saniyeyi aşarsa ekran kendiliğinden bekleme ekranına döner (bekçi).
 4. **Gösteri (34 sn):**
    - Hikâye metinleri `display/js/story.js` içinde.
    - Objelerin toplanması ve kamera yolu arketipe göre değişir:

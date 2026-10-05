@@ -252,7 +252,8 @@ const _q = new THREE.Quaternion();
 const _eFlat = new THREE.Euler(-Math.PI / 2, 0, 0);
 
 export class AnamorphScene {
-  constructor(scene) {
+  constructor(scene, library) {
+    this.lib = library;
     this.scene = scene;
     this.group = new THREE.Group();
     scene.add(this.group);
@@ -276,9 +277,8 @@ export class AnamorphScene {
   }
 
   clear() {
-    for (const m of this.meshes) {
-      for (const mesh of [m.front, m.back]) { this.group.remove(mesh); mesh.geometry.dispose(); mesh.material.dispose(); }
-    }
+    // Geometri ve malzemeler kütüphaneye ait; yalnızca örnek dizilerini at.
+    for (const m of this.meshes) { this.group.remove(m.front); m.front.dispose(); }
     this.meshes = [];
     if (this.wires) { this.group.remove(this.wires); this.wires.geometry.dispose(); this.wires.material.dispose(); this.wires = null; }
   }
@@ -385,16 +385,12 @@ export class AnamorphScene {
       byType.get(it.sprite).push(it);
     }
     for (const [sprite, list] of byType) {
-      const tex = this.textureFor(sprite);
-      const front = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), makeMaterial(tex, sprite.natural, 1), list.length);
-      const back = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), makeMaterial(tex, sprite.natural, 0.22), list.length);
-      for (const m of [front, back]) {
-        m.frustumCulled = false;
-        list.forEach((it, k) => { _color.setRGB(it.rgb[0], it.rgb[1], it.rgb[2]); m.setColorAt(k, _color); });
-        this.group.add(m);
-      }
-      back.visible = this.showBacks;
-      this.meshes.push({ front, back, items: list });
+      const { geometry, materials } = this.lib.get(sprite);
+      const front = new THREE.InstancedMesh(geometry, materials, list.length);
+      front.frustumCulled = false;
+      list.forEach((it, k) => { _color.setRGB(it.rgb[0], it.rgb[1], it.rgb[2]); front.setColorAt(k, _color); });
+      this.group.add(front);
+      this.meshes.push({ front, back: null, items: list });
     }
 
     // Askı telleri.
@@ -416,7 +412,7 @@ export class AnamorphScene {
 
   setOptions({ backs, wires }) {
     this.showBacks = backs; this.showWires = wires;
-    for (const m of this.meshes) m.back.visible = backs;
+    for (const m of this.meshes) if (m.back) m.back.visible = backs;
     if (this.wires) this.wires.visible = wires;
   }
 
@@ -455,8 +451,8 @@ export class AnamorphScene {
    * Objeleri E noktasına göre yerleştir. prog (0–1) koreografinin ilerlemesi;
    * 1 iken her obje son yerindedir ve E'den bakınca portre oturur.
    */
-  layout(E, prog = 1) {
-    const animating = this.choreo && prog < 1;
+  layout(E, prog = 1, wobble = 0, time = 0) {
+    const animating = (this.choreo && prog < 1) || wobble > 0;
     if (!animating && this.lastE && this.lastE.distanceToSquared(E) < 1e-4) return;
     this.lastE = animating ? null : E.clone();
     const ch = this.choreo, H = this.opts?.screenH ?? 100;
@@ -473,7 +469,12 @@ export class AnamorphScene {
         _dummy.lookAt(E);
         _dummy.rotateZ(it.roll);
         let scale = sz;
-        if (animating) {
+        if (wobble > 0) {
+          // Havada süzülen objeler: hizalanmaya yaklaştıkça durur.
+          _dummy.rotateX(Math.sin(time * (0.6 + it.r1) + it.r2 * 6.3) * 0.9 * wobble);
+          _dummy.rotateY(Math.cos(time * (0.5 + it.r3) + it.r1 * 6.3) * 1.1 * wobble);
+        }
+        if (animating && this.choreo && prog < 1) {
           const p = clamp((T - it.delay) / ch.dur, 0, 1);
           if (p < 1) {
             const Q = _dummy.position;
@@ -517,23 +518,15 @@ export class AnamorphScene {
             if (ch.kind === 'outsider' && p <= 0) scale = 0;
           }
         }
-        _dummy.scale.set(scale, scale, 1);
+        _dummy.scale.set(scale, scale, scale);
         _dummy.updateMatrix();
         front.setMatrixAt(k, _dummy.matrix);
-        // Askı teli: her 4 objeden yalnızca birinde (hepsinde olunca perde gibi görünüyor).
         if (wp && (wn++ & 3) === 0) {
           const x = _dummy.position.x, y = _dummy.position.y + sz * 0.3, z = _dummy.position.z;
           wp.setXYZ(wi++, x, y, z); wp.setXYZ(wi++, x, this.ceiling, z);
         }
-        // Arka plaka: göz doğrultusunda biraz geride → sihirli noktadan görünmez,
-        // yandan bakınca objenin kalınlığı gibi görünür.
-        _v.copy(_dummy.position).sub(E).normalize().multiplyScalar(sz * 0.08);
-        _dummy.position.add(_v);
-        _dummy.updateMatrix();
-        back.setMatrixAt(k, _dummy.matrix);
       }
       front.instanceMatrix.needsUpdate = true;
-      back.instanceMatrix.needsUpdate = true;
     }
     if (wp) { this.wires.geometry.setDrawRange(0, wi); wp.needsUpdate = true; }
   }

@@ -43,8 +43,42 @@ function toCanvas(src, mirror) {
  * Fotoğraftan yüz merkezli portre kırpar ve kişi maskesi çıkarır.
  * Dönüş: { color: canvas, mask: canvas (gri tonlu), aspect, faceFound, segmented }
  */
-export async function preparePortrait(src, { aspect = 0.78, outH = 720, mirror = false } = {}) {
+// MediaPipe grafikleri aynı anda çağrılmasın: portre işlenirken yüz takibi bekler.
+let visionBusy = false;
+export const isVisionBusy = () => visionBusy;
+
+export async function preparePortrait(src, opts = {}) {
+  visionBusy = true;
+  try { return await preparePortraitInner(src, opts); } finally { visionBusy = false; }
+}
+
+/**
+ * MediaPipe kullanmadan yedek portre: ortadan 3:4 kırpma + elips maske.
+ * Görüntü işleme takılırsa ya da hata verirse deneyim bununla devam eder.
+ */
+export function fallbackPortrait(src, { aspect = 0.78, outH = 720, mirror = false } = {}) {
   const full = toCanvas(src, mirror);
+  const W = full.width || 640, H = full.height || 480;
+  const ch = H * 0.95, cw = Math.min(W, ch * aspect);
+  const outW = Math.round(outH * aspect);
+  const color = document.createElement('canvas');
+  color.width = outW; color.height = outH;
+  const g = color.getContext('2d');
+  g.fillStyle = '#000'; g.fillRect(0, 0, outW, outH);
+  if (full.width) g.drawImage(full, (W - cw) / 2, H * 0.02, cw, cw / aspect, 0, 0, outW, outH);
+  const mask = document.createElement('canvas');
+  mask.width = outW; mask.height = outH;
+  const mg = mask.getContext('2d');
+  mg.fillStyle = '#000'; mg.fillRect(0, 0, outW, outH);
+  mg.fillStyle = '#fff'; mg.beginPath();
+  mg.ellipse(outW / 2, outH * 0.42, outW * 0.33, outH * 0.36, 0, 0, Math.PI * 2); mg.fill();
+  mg.beginPath(); mg.ellipse(outW / 2, outH * 1.05, outW * 0.5, outH * 0.3, 0, 0, Math.PI * 2); mg.fill();
+  return { color, mask, aspect, faceFound: false, segmented: false, regions: null };
+}
+
+async function preparePortraitInner(src, { aspect = 0.78, outH = 720, mirror = false } = {}) {
+  const full = toCanvas(src, mirror);
+  if (!full.width || !full.height) throw new Error('boş görüntü');
   const W = full.width, H = full.height;
 
   // 1) Yüzü bul ve baş + omuzları kapsayacak şekilde kırp.
@@ -193,7 +227,7 @@ export class HeadTracker {
 
   /** @returns {{x,y,z,u,v}|null} kamera koordinatı (cm): x sağ, y yukarı, z kameradan uzaklık */
   detect(video, hfovDeg) {
-    if (!this.task || video.readyState < 2) return undefined;
+    if (!this.task || video.readyState < 2 || visionBusy) return undefined;
     const ts = performance.now();
     if (video.currentTime === this.lastVideoTime) return undefined;
     this.lastVideoTime = video.currentTime;
