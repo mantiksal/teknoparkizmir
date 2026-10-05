@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>İYTE Anamorfoz</title>
+<style>
+  :root {
+    --bg: #000; --panel: rgba(18, 18, 22, 0.92); --line: #2c2c34; --text: #e8e8ee;
+    --muted: #8b8b98; --accent: #ff6a3d; --ok: #3ddc84; --warn: #ffb547;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; }
+  #view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  body.clean #panel, body.clean #hud, body.clean #minimap, body.clean #camwrap { display: none; }
+  body.clean { cursor: none; }
+
+  #panel { position: fixed; top: 12px; right: 12px; width: 300px; max-height: calc(100% - 24px);
+    overflow-y: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 14px; backdrop-filter: blur(6px); }
+  #panel h1 { font-size: 15px; margin: 0 0 2px; }
+  #panel .sub { color: var(--muted); font-size: 11px; margin-bottom: 8px; }
+  details { border-top: 1px solid var(--line); padding: 8px 0 4px; }
+  summary { cursor: pointer; font-weight: 600; margin-bottom: 6px; }
+  .row { display: grid; grid-template-columns: 1fr 112px; align-items: center; gap: 6px; margin: 5px 0; }
+  .row label { color: var(--muted); font-size: 12px; }
+  .row .v { font-variant-numeric: tabular-nums; color: var(--text); }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  select, input[type=number] { width: 100%; background: #111; color: var(--text); border: 1px solid var(--line);
+    border-radius: 6px; padding: 4px 6px; font: inherit; }
+  .btns { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+  button { background: #1d1d24; color: var(--text); border: 1px solid var(--line); border-radius: 7px;
+    padding: 6px 10px; font: inherit; cursor: pointer; }
+  button:hover { border-color: #444452; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #111; font-weight: 600; }
+  button.on { border-color: var(--accent); color: var(--accent); }
+  .thumbs { display: flex; gap: 6px; margin-top: 6px; }
+  .thumbs canvas { height: 110px; border-radius: 6px; border: 1px solid var(--line); background: #111; }
+  .note { color: var(--muted); font-size: 11px; margin: 4px 0; }
+  kbd { background: #222; border: 1px solid #333; border-radius: 4px; padding: 0 4px; font-size: 11px; }
+
+  #hud { position: fixed; left: 12px; top: 12px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 8px 12px; font-variant-numeric: tabular-nums; min-width: 230px; }
+  #hud .k { color: var(--muted); }
+  #align { height: 6px; background: #222; border-radius: 3px; margin-top: 6px; overflow: hidden; }
+  #align > div { height: 100%; width: 0; background: var(--ok); transition: width .1s; }
+
+  #minimap { position: fixed; left: 12px; bottom: 12px; width: 220px; height: 220px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  #camwrap { position: fixed; left: 244px; bottom: 12px; width: 220px; border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--line); background: #111; display: none; }
+  #camwrap.show { display: block; }
+  #cam { width: 100%; display: block; transform: scaleX(-1); }
+  #camdot { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: var(--ok);
+    margin: -5px 0 0 -5px; display: none; box-shadow: 0 0 0 2px #000; }
+
+  #overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+    font-size: 30vh; font-weight: 900; color: #fff; text-shadow: 0 0 40px #000; pointer-events: none; }
+  #overlay.show { display: flex; }
+  #flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; transition: opacity .4s; }
+  #toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--panel);
+    border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; display: none; }
+
+  /* Sıra paneli */
+  #queue { display: grid; gap: 4px; max-height: 210px; overflow-y: auto; margin: 6px 0; }
+  #queue .q { display: grid; grid-template-columns: 42px 1fr auto; gap: 8px; align-items: center; text-align: left;
+    padding: 6px 8px; border-radius: 7px; background: #15151b; border: 1px solid var(--line); }
+  #queue .q.cur { border-color: var(--accent); }
+  #queue .q.done { opacity: .45; }
+  #queue .n { font-weight: 800; font-variant-numeric: tabular-nums; }
+  #queue .st { font-size: 11px; color: var(--muted); }
+  button.danger { border-color: #6b2b2b; color: #ff8a8a; }
+  button.danger.arm { background: #b3261e; color: #fff; border-color: #b3261e; }
+
+  /* Arketip açılışı: portre oturunca belirir */
+  #reveal { position: fixed; left: 0; right: 0; bottom: 4vh; text-align: center; pointer-events: none;
+    opacity: 0; transform: translateY(2vh); transition: opacity .7s ease, transform .7s ease; }
+  #reveal.show { opacity: 1; transform: none; }
+  #reveal .hello { font-size: 2.4vh; color: #cfcfd8; letter-spacing: .04em; }
+  #reveal .name { font-size: 7.5vh; font-weight: 900; letter-spacing: .06em; line-height: 1.05;
+    text-shadow: 0 0 4vh var(--arch, #ff6a3d); color: #fff; }
+  #reveal .name small { display: block; font-size: 2.2vh; font-weight: 600; letter-spacing: .3em; color: var(--arch, #ff6a3d); text-shadow: none; margin-top: .6vh; }
+  #reveal .motto { font-size: 3vh; font-style: italic; margin-top: 1vh; color: #f3f3f7; }
+</style>
+</head>
+<body>
+<canvas id="view"></canvas>
+
+<div id="hud">
+  <div><span class="k">Mod:</span> <span id="hMode">–</span></div>
+  <div><span class="k">Göz:</span> <span id="hEye">–</span></div>
+  <div><span class="k">Takip:</span> <span id="hTrack">–</span></div>
+  <div><span class="k">Obje:</span> <span id="hCount">–</span> · <span id="hFps">–</span> fps</div>
+  <div id="align"><div></div></div>
+</div>
+<canvas id="minimap" width="440" height="440"></canvas>
+<div id="camwrap"><video id="cam" playsinline muted></video><div id="camdot"></div></div>
+<div id="overlay"></div>
+<div id="flash"></div>
+<div id="toast"></div>
+<div id="reveal"><div class="hello" id="rHello"></div><div class="name" id="rName"></div><div class="motto" id="rMotto"></div></div>
+
+<aside id="panel">
+  <h1>İYTE Anamorfoz Portre</h1>
+  <div class="sub">Teknopark İzmir · prototip</div>
+
+  <details open id="queueBox">
+    <summary>0 · Sıra (stand tableti)</summary>
+    <div class="note" id="qInfo">Sunucu bekleniyor…</div>
+    <div id="queue"></div>
+    <div class="btns">
+      <button class="primary" id="bNext">Sıradaki <kbd>N</kbd></button>
+      <button class="danger" id="bPurge">Tüm verileri sil</button>
+    </div>
+  </details>
+
+  <details open>
+    <summary>1 · Portre</summary>
+    <div class="btns">
+      <button class="primary" id="bCapture">Kameradan çek <kbd>Space</kbd></button>
+      <button id="bUpload">Dosya yükle</button>
+      <button id="bText">İYTE yazısı</button>
+    </div>
+    <input type="file" id="file" accept="image/*" hidden>
+    <div class="row"><label>Fotoğrafı aynala (selfie)</label><input type="checkbox" data-k="mirrorPhoto"></div>
+    <div class="row"><label>Arketip</label>
+      <select id="archSel"><option value="">— yok (genel) —</option></select></div>
+    <div class="thumbs" id="thumbs"></div>
+    <div class="note" id="pInfo"></div>
+  </details>
+
+  <details open>
+    <summary>2 · Görüntüleme</summary>
+    <div class="btns" id="modes">
+      <button data-mode="demo">Otomatik demo <kbd>1</kbd></button>
+      <button data-mode="mouse">Fare <kbd>2</kbd></button>
+      <button data-mode="track">Kamera takibi <kbd>3</kbd></button>
+    </div>
+    <div class="row"><label>Kurulum ön ayarı</label>
+      <select data-k="preset"><option value="laptop">Laptop ekranı</option><option value="tent">Çadır (3×3 m)</option></select></div>
+    <div class="row"><label>Takip yöntemi</label>
+      <select data-k="tracker"><option value="face">Yüz (yakın, &lt;1,5 m)</option><option value="pose">Vücut (1–4 m)</option></select></div>
+    <div class="row"><label>Kamera önizleme</label><input type="checkbox" data-k="showCam"></div>
+    <div class="note"><kbd>H</kbd> arayüzü gizle · <kbd>F</kbd> tam ekran · <kbd>R</kbd> yeniden karıştır</div>
+  </details>
+
+  <details>
+    <summary>3 · Perde &amp; sihirli nokta</summary>
+    <div class="row"><label>Perde genişliği (cm)</label><input type="number" data-k="screenW" step="1"></div>
+    <div class="row"><label>Sihirli nokta X (cm)</label><input type="number" data-k="sweetX" step="1"></div>
+    <div class="row"><label>Göz Y – perde merkezine göre</label><input type="number" data-k="sweetY" step="1"></div>
+    <div class="row"><label>Perdeye uzaklık Z (cm)</label><input type="number" data-k="sweetZ" step="1"></div>
+    <div class="row"><label>Boya göre uyarla</label><input type="checkbox" data-k="adaptHeight"></div>
+    <div class="row"><label>Mıknatıs yarıçapı (cm)</label><input type="number" data-k="magnetR" step="1"></div>
+    <div class="row"><label>Mıknatıs gücü <span class="v" data-v="magnet"></span></label><input type="range" min="0" max="1" step="0.05" data-k="magnet"></div>
+  </details>
+
+  <details>
+    <summary>4 · Kamera kalibrasyonu</summary>
+    <div class="row"><label>Kamera X (cm)</label><input type="number" data-k="camX" step="1"></div>
+    <div class="row"><label>Kamera, perde üstünden (cm)</label><input type="number" data-k="camYOff" step="1"></div>
+    <div class="row"><label>Kamera eğimi (° aşağı)</label><input type="number" data-k="camPitch" step="1"></div>
+    <div class="row"><label>Yatay görüş açısı (°)</label><input type="number" data-k="hfov" step="1"></div>
+    <div class="row"><label>Mesafe ölçeği <span class="v" data-v="distScale"></span></label><input type="range" min="0.6" max="1.6" step="0.01" data-k="distScale"></div>
+    <div class="row"><label>Yumuşatma <span class="v" data-v="smooth"></span></label><input type="range" min="0.1" max="3" step="0.05" data-k="smooth"></div>
+    <div class="row"><label>X eksenini ters çevir</label><input type="checkbox" data-k="flipX"></div>
+  </details>
+
+  <details>
+    <summary>5 · Obje bulutu</summary>
+    <div class="row"><label>Obje sayısı <span class="v" data-v="targetCount"></span></label><input type="range" min="200" max="2500" step="50" data-k="targetCount"></div>
+    <div class="row"><label>En yakın derinlik <span class="v" data-v="sMin"></span></label><input type="range" min="0.3" max="1" step="0.05" data-k="sMin"></div>
+    <div class="row"><label>En uzak derinlik <span class="v" data-v="sMax"></span></label><input type="range" min="1.1" max="4" step="0.05" data-k="sMax"></div>
+    <div class="row"><label>Arka plan objeleri <span class="v" data-v="decoy"></span></label><input type="range" min="0" max="1" step="0.05" data-k="decoy"></div>
+    <div class="row"><label>Logo/hero oranı <span class="v" data-v="hero"></span></label><input type="range" min="0" max="0.05" step="0.002" data-k="hero"></div>
+    <div class="row"><label>Kalınlık</label><input type="checkbox" data-k="backs"></div>
+    <div class="row"><label>Askı telleri</label><input type="checkbox" data-k="wires"></div>
+    <div class="note" id="objInfo"></div>
+  </details>
+</aside>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
