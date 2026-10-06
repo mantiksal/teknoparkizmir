@@ -22,6 +22,10 @@ export const CONFIG = {
   // İlk dosya yoksa ikincisi denenir. null yaparsanız video gösterilmez.
   promoVideo: ['media/iyte-tanitim-540p.mp4', '../iyte-tanitim.mp4'],   // yalnızca bekleme ekranında
 
+  // Portredeki obje sayısı: arttıkça ayrıntı artar, kare hızı düşer.
+  // Stand bilgisayarında D tuşuyla fps'e bakın; 30'un altındaysa düşürün (ör. 1600).
+  portraitObjects: 2200,
+
   // Süreler (saniye)
   greet: 4,
   countdown: 5,

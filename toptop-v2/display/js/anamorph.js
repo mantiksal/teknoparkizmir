@@ -55,7 +55,7 @@ class Integral {
  * kenar yönü. Sonra quadtree ile yaklaşık `targetCount` hücreye böler.
  */
 export function analyzeTarget(target, targetCount) {
-  const N = 200;
+  const N = 260;
   const w = N, h = Math.round(N / target.aspect);
   const read = (src) => {
     const c = document.createElement('canvas');
@@ -130,8 +130,8 @@ export function analyzeTarget(target, targetCount) {
     lab: Array.from({ length: NREG }, (_, k) => Integral.from(w, h, (i) => (L[i] === k ? 1 : 0))),
   };
 
-  const S0 = 40, SMIN = 3;
-  const MAXS = { [REGION.EYE]: 5, [REGION.BROW]: 6, [REGION.LIPS]: 6, [REGION.SKIN]: 14, [REGION.HAIR]: 14, [REGION.BODY]: 20, [REGION.BG]: 20 };
+  const S0 = 52, SMIN = 3;
+  const MAXS = { [REGION.EYE]: 5, [REGION.BROW]: 6, [REGION.LIPS]: 6, [REGION.SKIN]: 16, [REGION.HAIR]: 16, [REGION.BODY]: 24, [REGION.BG]: 24 };
 
   const quad = (thr, collect) => {
     const leaves = [];

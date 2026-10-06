@@ -194,8 +194,8 @@ async function start(data) {
   // Bitiş ekranındaki polaroid için kırpılmış aslı sakla.
   try { s.photo = target.color.toDataURL('image/jpeg', 0.85); } catch { s.photo = ''; }
   let analysis;
-  try { analysis = analyzeTarget(target, 1200); } catch (e) {
-    console.error(e); analysis = analyzeTarget(fallbackPortrait(shot, { mirror: true }), 1200);
+  try { analysis = analyzeTarget(target, CONFIG.portraitObjects); } catch (e) {
+    console.error(e); analysis = analyzeTarget(fallbackPortrait(shot, { mirror: true }), CONFIG.portraitObjects);
   }
   ana.build(analysis, sprites, {
     screenW: W, screenH: H, sMin: 0.5, sMax: 2.3, decoyRatio: 0.16, heroRatio: 0.006,
