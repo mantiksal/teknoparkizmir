@@ -173,6 +173,14 @@ export function analyzeTarget(target, targetCount) {
     if (quad(mid, false).length > targetCount) a = mid; else bnd = mid;
   }
   const leaves = quad(bnd, true);
+  // Geçersiz renk (NaN/sonsuz) içeren hücreleri nötr griye çevir; seçim ve boyama bozulmasın.
+  let bad = 0;
+  for (const lf of leaves) {
+    for (const k of ['r', 'g', 'b']) if (!Number.isFinite(lf[k])) { lf[k] = 0.5; bad++; }
+    if (!Number.isFinite(lf.angle)) lf.angle = 0;
+    if (!Number.isFinite(lf.coherence)) lf.coherence = 0;
+  }
+  if (bad) console.warn(`analyzeTarget: ${bad} geçersiz renk değeri düzeltildi (hücre: ${leaves.length})`);
 
   // Arka plan noktaları (dekor objeleri için).
   const bg = [];
@@ -296,6 +304,7 @@ export class AnamorphScene {
     const heroes = sprites.filter((s) => s.hero);
     const sRand = () => opts.sMin + (opts.sMax - opts.sMin) * Math.pow(rnd(), 0.85);
 
+    const fallbackSprite = sprites.find((s) => !s.hero && !s.natural) || sprites[0];
     const poolCache = new Map();
     const pool = (region) => {
       if (!poolCache.has(region)) {
@@ -308,13 +317,14 @@ export class AnamorphScene {
       const p = pool(region);
       let r = rnd() * p.total;
       for (const [s, w] of p.list) { r -= w; if (r <= 0) return s; }
-      return p.list[p.list.length - 1][0];
+      return p.list.length ? p.list[p.list.length - 1][0] : fallbackSprite;
     };
     // Ağırlığa göre birkaç aday çek, rengi en iyi verebileni seç.
     const choose = (region, tl) => {
       let best = null, bestE = Infinity;
       for (let k = 0; k < 4; k++) {
         const s = sample(region);
+        if (!best) best = s;   // hata değeri geçersiz olsa da boş dönme
         const e = fitError(s, tl) + rnd() * 0.02;
         if (e < bestE) { bestE = e; best = s; }
       }

@@ -197,10 +197,22 @@ async function start(data) {
   try { analysis = analyzeTarget(target, CONFIG.portraitObjects); } catch (e) {
     console.error(e); analysis = analyzeTarget(fallbackPortrait(shot, { mirror: true }), CONFIG.portraitObjects);
   }
-  ana.build(analysis, sprites, {
+  const buildOpts = {
     screenW: W, screenH: H, sMin: 0.5, sMax: 2.3, decoyRatio: 0.16, heroRatio: 0.006,
     seed: (Math.random() * 1e9) | 0, archetype: data.archetype, archColor: a.color, ...portraitLayout(),
-  });
+  };
+  try {
+    ana.build(analysis, sprites, buildOpts);
+  } catch (e) {
+    console.error('Portre kurulamadı, yedek kırpma deneniyor:', e);
+    try {
+      ana.build(analyzeTarget(fallbackPortrait(shot, { mirror: true }), CONFIG.portraitObjects), sprites, buildOpts);
+    } catch (e2) {
+      console.error('Yedek de kurulamadı; bekleme ekranına dönülüyor:', e2);
+      enterIdle();
+      return;
+    }
+  }
   ana.setChoreography(data.archetype, BUILD.span);
   ana.group.visible = true;
 
