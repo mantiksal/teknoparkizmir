@@ -12,6 +12,8 @@ import sys
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
+# Repo kökündeki 1. monitör ekranı da aynı sunucudan: /qr-display/
+EXTRA = {"/qr-display/": os.path.join(os.path.dirname(ROOT), "qr-display")}
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -20,6 +22,18 @@ class Handler(SimpleHTTPRequestHandler):
 
     def log_message(self, fmt, *args):
         pass
+
+    def translate_path(self, path):
+        clean = path.split("?", 1)[0].split("#", 1)[0]
+        if clean == "/qr-display":
+            clean = "/qr-display/"
+        for prefix, base in EXTRA.items():
+            if clean.startswith(prefix):
+                rel = clean[len(prefix):]
+                parts = [p for p in rel.split("/") if p and p not in (".", "..")]
+                from urllib.parse import unquote
+                return os.path.join(base, *[unquote(p) for p in parts])
+        return super().translate_path(path)
 
     def end_headers(self):
         self.send_header("Accept-Ranges", "bytes")
