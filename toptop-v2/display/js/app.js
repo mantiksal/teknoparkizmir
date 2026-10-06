@@ -136,7 +136,7 @@ async function startPromo() {
 let state = 'boot', stateSince = 0;
 function setState(s) { state = s; stateSince = performance.now() / 1000; }
 let sprites = [];
-const layers = ['idle', 'greet', 'capture', 'proc', 'caption', 'say', 'end'];
+const layers = ['idle', 'greet', 'capture', 'proc', 'brand', 'caption', 'say', 'end'];
 function showLayer(...on) { for (const id of layers) $(id).classList.toggle('on', on.includes(id)); }
 
 function enterIdle() {
@@ -212,7 +212,7 @@ async function start(data) {
   $('sayBox').innerHTML = ''; $('say').classList.remove('out');
   $('capDots').innerHTML = SCENES.map(() => '<i></i>').join('');
   setState('show');
-  showLayer('caption', 'say');
+  showLayer('brand', 'caption', 'say');
 }
 
 async function capturePhoto() {
@@ -365,7 +365,7 @@ function enterEnd() {
   $('eScan').textContent = 'Okut, yerini ayırt';
   $('eQr').textContent = '…';
   $('end').classList.remove('invite');
-  showLayer('end');
+  showLayer('brand', 'end');
   // Önce unvan ve portre; 1,4 sn sonra davetiye konfetiyle gelir.
   setTimeout(() => { if (session === s) { $('end').classList.add('invite'); confetti(); } }, 1400);
   const bar = $('eBar');

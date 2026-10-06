@@ -96,7 +96,8 @@
   #flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 20; }
 
   /* ---------- hikâye: tam genişlikte, bulanık arka planlı bant ---------- */
-  #caption .logo { position: absolute; top: calc(var(--u) * 4.5); left: calc(var(--u) * 5); height: calc(var(--u) * 10); opacity: .95; }
+  #brand { z-index: 11; }
+  #brand .logo { position: absolute; top: calc(var(--u) * 4.5); left: calc(var(--u) * 5); height: calc(var(--u) * 10); opacity: .95; }
   #caption .band { position: absolute; left: 0; right: 0; bottom: calc(var(--u) * 11); text-align: center;
     padding: calc(var(--u) * 4) calc(var(--u) * 6) calc(var(--u) * 4.5);
     background: linear-gradient(rgba(14,16,19,.80), rgba(14,16,19,.90)); backdrop-filter: blur(14px) saturate(1.2);
@@ -137,7 +138,7 @@
   #end .shadeTop { position: absolute; left: 0; right: 0; top: 0; height: 24%; z-index: 0;
     background: linear-gradient(rgba(20,22,25,.92), rgba(20,22,25,.75) 60%, rgba(20,22,25,0)); }
   #end .top, #end .bottom { z-index: 2; }
-  #end .top { position: absolute; top: calc(var(--u) * 4); left: 0; right: 0; text-align: center; }
+  #end .top { position: absolute; top: calc(var(--u) * 15); left: 0; right: 0; text-align: center; }
   #end .pre { font-size: calc(var(--u) * 5); color: #e2e6ea; font-weight: 700; }
   #end .arch { font-size: calc(var(--u) * 10.5); white-space: nowrap; font-weight: 900; letter-spacing: .01em; color: var(--arch); line-height: 1.05;
     text-shadow: 0 0 calc(var(--u) * 6) color-mix(in srgb, var(--arch) 55%, transparent); }
@@ -270,8 +271,9 @@
   <div><div class="spin"></div><div class="t">Hazırlanıyor…</div></div>
 </section>
 
+<section class="layer" id="brand"><img class="logo" src="assets/brand/teknopark-logo-light.png" alt=""></section>
+
 <section class="layer" id="caption">
-  <img class="logo" src="assets/brand/teknopark-logo-light.png" alt="">
   <div class="band">
     <div class="item kicker" id="capKicker"></div>
     <div class="item title" id="capTitle"></div>
