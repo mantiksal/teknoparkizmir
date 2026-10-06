@@ -62,6 +62,13 @@ class Handler(SimpleHTTPRequestHandler):
             pass
 
 
+class Server(ThreadingHTTPServer):
+    # Varsayılan bekleme kuyruğu (5) sayfa açılırken onlarca eşzamanlı istekte taşıyor
+    # ve tarayıcı "bağlantı sıfırlandı" hatası alıyor.
+    request_queue_size = 128
+    daemon_threads = True
+
+
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8001
-    ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()
+    Server(("127.0.0.1", port), Handler).serve_forever()

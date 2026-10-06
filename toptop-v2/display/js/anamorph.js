@@ -249,6 +249,8 @@ const _dummy = new THREE.Object3D();
 const _color = new THREE.Color();
 const _v = new THREE.Vector3();
 const _q = new THREE.Quaternion();
+const _q2 = new THREE.Quaternion();
+const _eTmp = new THREE.Euler();
 const _eFlat = new THREE.Euler(-Math.PI / 2, 0, 0);
 
 export class AnamorphScene {
@@ -417,118 +419,99 @@ export class AnamorphScene {
   }
 
   /**
-   * Toplanma koreografisi: her obje kendi başlangıç noktasından, kendi
-   * gecikmesiyle yerine akar. kind: firestarter | mountaineer | trailblazer |
-   * cartographer | outsider | swirl
+   * Portrenin kurulma sırası. Objeler önce dağınık bir bulutta süzülür; kurulma
+   * başlayınca buluttan çıkıp portredeki yerlerine TEK TEK uçarlar. Başta birkaç
+   * obje yavaşça, sonra giderek hızlanarak akın akın yerleşir: n(t) ∝ t³.
+   * Sıra arketipe göre: firestarter rastgele kıvılcımlar, mountaineer aşağıdan
+   * yukarı, trailblazer ortadan dışa, cartographer satır satır, outsider ortadan
+   * dışa ve düzenli.
+   * @param span  kurulmanın sürdüğü saniye (son objenin yola çıktığı an)
    */
-  setChoreography(kind) {
+  setChoreography(kind, span = 8.5) {
     const { pw, ph, y, x: ox } = this.portrait;
-    const dur = { firestarter: 0.35, mountaineer: 0.3, trailblazer: 0.4, cartographer: 0.35, outsider: 0.12, swirl: 0.5 }[kind] ?? 0.5;
+    const W = this.opts?.screenW ?? 100, H = this.opts?.screenH ?? 100;
+    const all = [];
     for (const { items } of this.meshes) {
       for (const it of items) {
         const nx = clamp((it.px - ox + pw / 2) / pw, 0, 1), ny = clamp((it.py - (y - ph / 2)) / ph, 0, 1);
-        const dc = Math.min(1, Math.hypot(it.px - ox, it.py - y) / (ph * 0.6));
-        let d;
+        const dc = Math.min(1.5, Math.hypot(it.px - ox, it.py - y) / (ph * 0.6));
+        let key;
         switch (kind) {
-          case 'firestarter': d = it.r1 * 0.25 + dc * 0.15; break;              // merkezden patlayıp toplanır
-          case 'mountaineer': d = ny * 0.55 + it.r1 * 0.12; break;              // aşağıdan yukarı tırmanır
-          case 'trailblazer': d = (1 - it.s / 2.4) * 0.35 + it.r1 * 0.2; break; // önden arkaya yol açılır
-          case 'cartographer': d = (1 - ny) * 0.45 + nx * 0.1 + it.r1 * 0.08; break; // harita satır satır katlanır
-          case 'outsider': d = dc * 0.8 + it.r1 * 0.06; break;                  // ortadan dışa, tek tek
-          default: d = it.r1 * 0.5;
+          case 'firestarter': key = it.r1; break;
+          case 'mountaineer': key = ny * 0.85 + it.r1 * 0.15; break;
+          case 'trailblazer': key = dc * 0.8 + it.r1 * 0.2; break;
+          case 'cartographer': key = (1 - ny) * 0.9 + nx * 0.05 + it.r1 * 0.05; break;
+          case 'outsider': key = dc * 0.92 + it.r1 * 0.08; break;
+          default: key = it.r1;
         }
-        it.delay = d;
+        // Dağınık buluttaki yeri (C'ye göre): geniş, derin bir hacim.
+        it.ox = (it.r1 - 0.5) * W * 1.9;
+        it.oy = (it.r2 - 0.5) * H * 1.5;
+        it.oz = (it.r3 - 0.5) * H * 2.2;
+        it.key = key;
+        all.push(it);
       }
     }
-    this.choreo = { kind, dur, maxEnd: 0 };
-    let m = 0;
-    for (const { items } of this.meshes) for (const it of items) m = Math.max(m, it.delay + dur);
-    this.choreo.maxEnd = m;
+    all.sort((a, b) => a.key - b.key);
+    const N = all.length;
+    all.forEach((it, i) => {
+      const r = N > 1 ? i / (N - 1) : 0;
+      it.tStart = span * Math.cbrt(r);                    // ivmelenen akış
+      it.dur = 0.75 + 1.1 * Math.pow(1 - r, 6);           // ilk objeler daha yavaş ve görünür uçar
+    });
+    this.choreo = { kind, span, end: span + 2 };
     this.lastE = null;
   }
 
   /**
-   * Objeleri E noktasına göre yerleştir. prog (0–1) koreografinin ilerlemesi;
-   * 1 iken her obje son yerindedir ve E'den bakınca portre oturur.
+   * Objeleri yerleştir.
+   * @param buildT  kurulmanın başından beri geçen saniye (<0: hepsi dağınık bulutta)
+   * @param wobble  dağınıkken süzülme miktarı
+   * @param time    animasyon saati
    */
-  layout(E, prog = 1, wobble = 0, time = 0) {
-    const animating = (this.choreo && prog < 1) || wobble > 0;
+  layout(E, buildT = Infinity, wobble = 0, time = 0) {
+    const ch = this.choreo;
+    const animating = (ch && buildT < ch.end) || wobble > 0;
     if (!animating && this.lastE && this.lastE.distanceToSquared(E) < 1e-4) return;
     this.lastE = animating ? null : E.clone();
-    const ch = this.choreo, H = this.opts?.screenH ?? 100;
     const sMean = this.opts ? (this.opts.sMin + this.opts.sMax) / 2 : 1.3;
     const C = new THREE.Vector3(this.portrait?.x ?? 0, this.portrait?.y ?? 0, 0).sub(E).multiplyScalar(sMean).add(E);
-    const T = ch ? prog * ch.maxEnd : 1;
-    const wp = this.wires?.geometry.attributes.position;
-    let wi = 0, wn = 0;
-    for (const { front, back, items } of this.meshes) {
+    for (const { front, items } of this.meshes) {
       for (let k = 0; k < items.length; k++) {
         const it = items[k];
         const sz = it.size * it.s;
+        // Son yeri: E'den bakınca portredeki hücresine düşer.
         _dummy.position.set(E.x + it.s * (it.px - E.x), E.y + it.s * (it.py - E.y), E.z - it.s * E.z);
         _dummy.lookAt(E);
         _dummy.rotateZ(it.roll);
-        let scale = sz;
-        if (wobble > 0) {
-          // Havada süzülen objeler: hizalanmaya yaklaştıkça durur.
+        let p = 1;
+        if (ch) p = clamp((buildT - it.tStart) / it.dur, 0, 1);
+        if (p < 1) {
+          _q.copy(_dummy.quaternion);
+          _v.copy(_dummy.position);                               // son yer
+          // Dağınık haldeki yer ve dönüş (süzülerek)
+          const sx = C.x + it.ox + Math.sin(time * 0.35 + it.r2 * 9) * 3;
+          const sy = C.y + it.oy + Math.sin(time * 0.5 + it.r3 * 9) * 2;
+          const sz0 = C.z + it.oz + Math.cos(time * 0.3 + it.r1 * 9) * 3;
+          _eTmp.set(it.r1 * 6.3 + time * (it.r2 - 0.5) * 0.9, it.r2 * 6.3 + time * (it.r3 - 0.5) * 0.9, it.r3 * 6.3);
+          _q2.setFromEuler(_eTmp);
+          let e;
+          if (ch?.kind === 'firestarter') { const c1 = 1.7, c3 = c1 + 1; e = 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); }
+          else e = 1 - Math.pow(1 - p, 3);
+          // Kavisli uçuş: yolun ortasında kameraya doğru hafif bir yay
+          const arc = Math.sin(Math.min(1, e) * Math.PI) * sz * 2.5;
+          _dummy.position.set(sx + (_v.x - sx) * e, sy + (_v.y - sy) * e, sz0 + (_v.z - sz0) * e + arc);
+          _dummy.quaternion.copy(_q2).slerp(_q, clamp(e, 0, 1));
+        } else if (wobble > 0) {
           _dummy.rotateX(Math.sin(time * (0.6 + it.r1) + it.r2 * 6.3) * 0.9 * wobble);
           _dummy.rotateY(Math.cos(time * (0.5 + it.r3) + it.r1 * 6.3) * 1.1 * wobble);
         }
-        if (animating && this.choreo && prog < 1) {
-          const p = clamp((T - it.delay) / ch.dur, 0, 1);
-          if (p < 1) {
-            const Q = _dummy.position;
-            _q.copy(_dummy.quaternion);
-            let e = 1 - Math.pow(1 - p, 3);
-            switch (ch.kind) {
-              case 'firestarter': {
-                // Merkezden dışarı fırlamış halden geri çekilir, hafif taşma ile oturur.
-                const c1 = 1.7, c3 = c1 + 1;
-                e = 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2);
-                _v.copy(Q).sub(C).multiplyScalar(1.8 + it.r2 * 1.2).add(C);
-                _v.x += (it.r3 - 0.5) * H * 0.5; _v.y += (it.r2 - 0.5) * H * 0.5;
-                _dummy.rotateZ((1 - e) * (it.r1 - 0.5) * 12);
-                break;
-              }
-              case 'mountaineer':
-                _v.set(Q.x, Q.y - H * (0.7 + it.r2 * 0.6), Q.z);
-                break;
-              case 'trailblazer':
-                // Ortada, yolun üstünde birikmiş objeler iki yana açılır.
-                _v.set(Q.x * 0.06 + (it.r2 - 0.5) * H * 0.08, C.y + (Q.y - C.y) * 0.06, Q.z - H * (0.6 + it.r3));
-                e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
-                break;
-              case 'cartographer': {
-                // Zemine serili bir harita gibi başlar, satır satır ayağa kalkar.
-                _v.set(Q.x * 1.3, C.y - H * 0.75, C.z + (it.py - (this.portrait?.y ?? 0)) * 1.6);
-                _dummy.quaternion.setFromEuler(_eFlat);
-                _dummy.rotateZ(it.roll);
-                _dummy.quaternion.slerp(_q, e);
-                e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
-                break;
-              }
-              case 'outsider':
-                _v.copy(Q);
-                scale = sz * (p < 0.7 ? p / 0.7 * 1.12 : 1.12 - (p - 0.7) / 0.3 * 0.12);
-                break;
-              default:
-                _v.set(C.x + (it.r1 - 0.5) * H * 2, C.y + (it.r2 - 0.5) * H * 2, C.z + (it.r3 - 0.5) * H * 2);
-            }
-            if (ch.kind !== 'outsider') Q.lerpVectors(_v, Q.clone(), e);
-            if (ch.kind === 'outsider' && p <= 0) scale = 0;
-          }
-        }
-        _dummy.scale.set(scale, scale, scale);
+        _dummy.scale.set(sz, sz, sz);
         _dummy.updateMatrix();
         front.setMatrixAt(k, _dummy.matrix);
-        if (wp && (wn++ & 3) === 0) {
-          const x = _dummy.position.x, y = _dummy.position.y + sz * 0.3, z = _dummy.position.z;
-          wp.setXYZ(wi++, x, y, z); wp.setXYZ(wi++, x, this.ceiling, z);
-        }
       }
       front.instanceMatrix.needsUpdate = true;
     }
-    if (wp) { this.wires.geometry.setDrawRange(0, wi); wp.needsUpdate = true; }
   }
 }
 

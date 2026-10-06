@@ -29,13 +29,9 @@
   .grad { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
   /* ---------- bekleme ---------- */
-  /* Üst sıra: QR kartı (sol), kamera (orta, üst kenara yapışık — kamera monitörün üstünde), logolar (sağ) */
-  #idle .qrcard { position: absolute; left: calc(var(--u) * 4); top: calc(var(--u) * 4); width: calc(var(--u) * 30);
-    background: #fff; color: #1d2024; border-radius: calc(var(--u) * 3.6); padding: calc(var(--u) * 2.4); text-align: center;
-    box-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 8) rgba(0,0,0,.45); }
-  #idle .qrcard canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
-  #idle .qrcard .lbl { font-size: calc(var(--u) * 3.1); font-weight: 900; margin-top: calc(var(--u) * 1.4); line-height: 1.1; }
-  #idle .qrcard .lbl small { display: block; font-size: calc(var(--u) * 2.3); font-weight: 500; color: #5d6570; margin-top: calc(var(--u) * .5); }
+  /* Üst sıra: Teknopark logosu (sol), kamera (orta, üst kenara yapışık — kamera monitörün üstünde), İYTE (sağ) */
+  #idle .tp { position: absolute; left: calc(var(--u) * 4); top: calc(var(--u) * 5); width: calc(var(--u) * 30); }
+  #idle .iy { position: absolute; right: calc(var(--u) * 4); top: calc(var(--u) * 4); height: calc(var(--u) * 17); }
   #idle .cam { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: calc(var(--u) * 31); aspect-ratio: 3 / 4;
     border-radius: 0 0 calc(var(--u) * 4) calc(var(--u) * 4); overflow: hidden; background: #000;
     border: calc(var(--u) * .8) solid #fff; border-top: 0; box-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 8) rgba(0,0,0,.55);
@@ -47,28 +43,28 @@
   #idle .cam span { position: absolute; left: 0; right: 0; bottom: 0; text-align: center; font-weight: 900; font-size: calc(var(--u) * 2.9);
     line-height: 1.15; padding: calc(var(--u) * 1.4) calc(var(--u) * 1); background: rgba(0,0,0,.7); }
   #idle.hit .cam { border-color: var(--green-2); transform: translateX(-50%) scale(1.06); }
-  #idle .logos { position: absolute; right: calc(var(--u) * 4); top: calc(var(--u) * 4); width: calc(var(--u) * 30);
-    display: flex; flex-direction: column; align-items: flex-end; gap: calc(var(--u) * 2.4); }
-  #idle .logos .tp { width: 100%; }
-  #idle .logos .iy { height: calc(var(--u) * 13); }
-  /* Başlık, video, adımlar */
-  #idle .headline { position: absolute; top: calc(var(--u) * 50); left: 0; right: 0; text-align: center; }
+  /* Başlık + QR kartı tek blok */
+  #idle .hero { position: absolute; top: calc(var(--u) * 47); left: calc(var(--u) * 4); right: calc(var(--u) * 4); text-align: center; }
   #idle h1 { margin: 0; font-weight: 900; line-height: .95; letter-spacing: -.03em; font-size: calc(var(--u) * 12.5); }
-  #idle .sub { font-size: calc(var(--u) * 3.7); color: #e2e6ea; margin-top: calc(var(--u) * 2.2); font-weight: 500; }
-  #media { position: absolute; left: calc(var(--u) * 5); right: calc(var(--u) * 5); top: calc(var(--u) * 87); aspect-ratio: 16 / 9;
+  #idle .sub { font-size: calc(var(--u) * 3.7); color: #e2e6ea; margin-top: calc(var(--u) * 2); font-weight: 500; }
+  #idle .card { margin-top: calc(var(--u) * 3.5); display: grid; grid-template-columns: auto 1fr; gap: calc(var(--u) * 3.5); align-items: center; text-align: left;
+    background: rgba(255,255,255,.96); color: #1d2024; border-radius: calc(var(--u) * 4.5); padding: calc(var(--u) * 3);
+    box-shadow: 0 calc(var(--u) * 3) calc(var(--u) * 10) rgba(0,0,0,.45); }
+  #idle .card canvas { display: block; width: calc(var(--u) * 27); height: calc(var(--u) * 27); image-rendering: pixelated; }
+  #idle .card ol { margin: 0; padding: 0; list-style: none; display: grid; gap: calc(var(--u) * 2.2); }
+  #idle .card li { display: grid; grid-template-columns: calc(var(--u) * 7.5) 1fr; gap: calc(var(--u) * 2); align-items: center;
+    font-size: calc(var(--u) * 3.9); line-height: 1.12; font-weight: 800; }
+  #idle .card li b { display: grid; place-items: center; width: calc(var(--u) * 7.5); height: calc(var(--u) * 7.5); border-radius: 50%;
+    color: #fff; font-size: calc(var(--u) * 4.4); font-weight: 900; }
+  #idle .card li:nth-child(1) b { background: var(--green); }
+  #idle .card li:nth-child(2) b { background: var(--blue); }
+  #idle .card li:nth-child(3) b { background: var(--orange); }
+  #idle .card li small { display: block; font-size: calc(var(--u) * 2.7); color: #5d6570; font-weight: 500; margin-top: calc(var(--u) * .4); }
+  #media { position: absolute; left: calc(var(--u) * 5); right: calc(var(--u) * 5); bottom: calc(var(--u) * 5); aspect-ratio: 16 / 9;
     border-radius: calc(var(--u) * 4); background: #000; box-shadow: 0 calc(var(--u) * 3) calc(var(--u) * 10) rgba(0,0,0,.55); }
   #media > video { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; }
   #media .tag { position: absolute; top: calc(var(--u) * -3); left: calc(var(--u) * 3); background: #a3142a; color: #fff;
     font-weight: 800; font-size: calc(var(--u) * 3.1); padding: calc(var(--u) * .9) calc(var(--u) * 2.6); border-radius: 99px; }
-  #idle .steps { position: absolute; left: calc(var(--u) * 4); right: calc(var(--u) * 4); bottom: calc(var(--u) * 5); margin: 0; padding: 0;
-    list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(var(--u) * 2.4); }
-  #idle .steps li { background: rgba(255,255,255,.95); color: #1d2024; border-radius: calc(var(--u) * 3.2); padding: calc(var(--u) * 2.6) calc(var(--u) * 2);
-    text-align: center; font-size: calc(var(--u) * 3.4); font-weight: 800; line-height: 1.15; }
-  #idle .steps b { display: grid; place-items: center; width: calc(var(--u) * 8); height: calc(var(--u) * 8); margin: 0 auto calc(var(--u) * 1.4);
-    border-radius: 50%; color: #fff; font-size: calc(var(--u) * 4.6); font-weight: 900; }
-  #idle .steps li:nth-child(1) b { background: var(--green); }
-  #idle .steps li:nth-child(2) b { background: var(--blue); }
-  #idle .steps li:nth-child(3) b { background: var(--orange); }
 
   /* ---------- karşılama ---------- */
   #greet { display: grid; place-items: center; text-align: center; background: rgba(20,22,25,.9); backdrop-filter: blur(6px); }
@@ -119,17 +115,19 @@
   #caption .dots { position: absolute; bottom: calc(var(--u) * 6.5); left: 0; right: 0; display: flex; justify-content: center; gap: calc(var(--u) * 1.6); }
   #caption .dots i { width: calc(var(--u) * 1.8); height: calc(var(--u) * 1.8); border-radius: 50%; background: rgba(255,255,255,.3); transition: background .3s, transform .3s; }
   #caption .dots i.on { background: var(--green-2); transform: scale(1.4); }
+  #caption .dots { transition: opacity .5s; } #caption .dots.gone { opacity: 0; }
   /* Ortadaki büyük cümleler: kelime kelime, bulanıktan nete */
   #say { display: grid; place-items: center; text-align: center; padding: 0 calc(var(--u) * 6); }
   #say .say { max-width: 100%; }
   #say .ln { display: block; font-size: calc(var(--u) * 8); font-weight: 800; line-height: 1.12; letter-spacing: -.01em;
     text-shadow: 0 0 calc(var(--u) * 3) rgba(0,0,0,.9), 0 calc(var(--u) * .5) calc(var(--u) * 2) rgba(0,0,0,.8); }
   #say .big .ln { font-size: calc(var(--u) * 12.5); font-weight: 900; line-height: 1.02; }
-  #say .big .ln + .ln { font-size: calc(var(--u) * 9); margin-top: calc(var(--u) * 2); }
-  #say .ln.grad { text-shadow: none; filter: drop-shadow(0 0 calc(var(--u) * 3) rgba(0,0,0,.85)); }
+  #say .big .ln { font-size: calc(var(--u) * 9.5); font-weight: 800; }
+  #say .big .ln:first-child { font-size: calc(var(--u) * 11); font-weight: 900; }
+  #say .big .ln.name { font-size: calc(var(--u) * 15); font-weight: 900; color: var(--green-2); margin-top: calc(var(--u) * 2.5);
+    text-shadow: 0 0 calc(var(--u) * 5) rgba(128,205,54,.55), 0 0 calc(var(--u) * 1.5) rgba(0,0,0,.9); }
   #say .w { display: inline-block; opacity: 0; filter: blur(12px); transform: translateY(calc(var(--u) * 2)) scale(1.08);
     animation: wordIn .7s cubic-bezier(.2,1,.3,1) forwards; }
-  #say .ln.grad .w { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
   @keyframes wordIn { to { opacity: 1; filter: none; transform: none; } }
   #say.out .say { transition: opacity .6s, transform .6s, filter .6s; opacity: 0; transform: scale(1.06); filter: blur(8px); }
 
@@ -200,10 +198,8 @@
     #idle .sub { font-size: calc(var(--u) * 3.2); }
     #end .arch { font-size: calc(var(--u) * 8.5); }
     #end .top, #end .bottom { left: 52%; right: 4%; }
-    #idle .qrcard, #idle .logos { width: calc(var(--u) * 26); }
-    #idle .headline { top: auto; bottom: calc(var(--u) * 34); left: 4%; right: 52%; text-align: left; }
-    #idle .steps { left: 4%; right: 52%; bottom: calc(var(--u) * 5); }
-    #media { left: 52%; right: 4%; top: auto; bottom: calc(var(--u) * 5); }
+    #idle .hero { top: auto; bottom: calc(var(--u) * 5); left: 4%; right: 52%; text-align: left; }
+    #media { left: 52%; right: 4%; bottom: calc(var(--u) * 5); }
     #end .top { text-align: left; top: 8vh; }
     #end .shade { left: 46%; top: 0; height: auto; background: linear-gradient(90deg, rgba(20,22,25,0), rgba(20,22,25,.94) 16%); }
     #end .shadeTop { display: none; }
@@ -220,35 +216,32 @@
 <canvas id="gl"></canvas>
 
 <section class="layer" id="idle">
-  <div class="qrcard">
-    <div class="qr" id="idleQr"></div>
-    <div class="lbl">Okut, testi çöz<small>8 soru · 1 dakika</small></div>
-  </div>
+  <img class="tp" src="assets/brand/teknopark-logo-light.png" alt="Teknopark İzmir">
   <div class="cam"><video id="camSmall" playsinline muted></video><i></i><span>Sonuç QR'ını<br>buraya göster ⬆</span></div>
-  <div class="logos">
-    <img class="tp" src="assets/brand/teknopark-logo-light.png" alt="Teknopark İzmir">
-    <img class="iy" src="assets/brand/iyte-logo.png" alt="İYTE">
-  </div>
-  <div class="headline">
+  <img class="iy" src="assets/brand/iyte-logo.png" alt="İYTE">
+  <div class="hero">
     <h1>NASIL BİR<br><span class="grad">GİRİŞİMCİSİN?</span></h1>
-    <div class="sub">Testi çöz, sonucunu kameraya göster… gerisi sürpriz! 🎁</div>
+    <div class="sub">Testi çöz, kameraya göster… gerisi sürpriz! 🎁</div>
+    <div class="card">
+      <div class="qr" id="idleQr"></div>
+      <ol>
+        <li><b>1</b><span>Bu QR'ı okut<small>8 soru · 1 dakika</small></span></li>
+        <li><b>2</b><span>Sonucunu yukarıdaki kameraya göster</span></li>
+        <li><b>3</b><span>Sürprize hazır ol!</span></li>
+      </ol>
+    </div>
   </div>
   <div id="media">
     <video id="promoVideo" muted playsinline loop preload="auto"></video>
     <div class="tag">İYTE'yi tanı</div>
   </div>
-  <ol class="steps">
-    <li><b>1</b>QR'ı okut, testi çöz</li>
-    <li><b>2</b>Sonucunu kameraya göster</li>
-    <li><b>3</b>Sürprize hazır ol!</li>
-  </ol>
 </section>
 
 <section class="layer" id="greet">
   <div>
     <div class="hi">Merhaba,</div>
     <div class="name grad" id="gName"></div>
-    <p>Şimdi kameraya gülümse 📸<small>Fotoğrafını çekiyorum; sonra arkana yaslan ve izle</small></p>
+    <p>Şimdi fotoğrafını çekiyorum 📸</p>
   </div>
 </section>
 
@@ -291,7 +284,6 @@
           <div class="ttl grad" id="tTitle">Teknogirişim Akademisi</div>
           <div class="to">Sevgili <b id="tName"></b>, girişimcilik yolculuğuna davetlisin.</div>
           <div class="meta"><span id="tDates"></span><span id="tPlace"></span></div>
-          <div class="no">DAVETİYE NO <b id="tNo"></b></div>
         </div>
         <div class="stub">
           <div class="qr" id="eQr">…</div>

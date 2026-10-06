@@ -49,7 +49,7 @@ export function composeCard(shot, info) {
   g.fillStyle = '#fff'; g.font = '900 56px Roboto, system-ui, sans-serif';
   g.fillText(CONFIG.academy.title, W / 2, y0 + 128, w - 60);
   g.fillStyle = '#aab1bb'; g.font = '500 30px Roboto, system-ui, sans-serif';
-  g.fillText(`${CONFIG.academy.dates} · ${CONFIG.academy.place}${info.no ? ' · ' + info.no : ''}`, W / 2, y0 + 180, w - 60);
+  g.fillText(`${CONFIG.academy.dates} · ${CONFIG.academy.place}`, W / 2, y0 + 180, w - 60);
   g.fillStyle = '#9aa0a8'; g.font = '400 34px Roboto, system-ui, sans-serif';
   g.fillText(CONFIG.academy.instagram, W / 2, 1900);
   return c;
@@ -68,6 +68,6 @@ export async function uploadCard(card, info) {
   });
   if (!r.ok) throw new Error('yükleme ' + r.status);
   const img = `${s.supabaseUrl}/storage/v1/object/public/${s.bucket}/${name}`;
-  const q = new URLSearchParams({ img, n: info.name, a: info.key, no: info.no || '' });
+  const q = new URLSearchParams({ img, n: info.name, a: info.key });
   return `${CONFIG.quizUrl}share.html?${q}`;
 }

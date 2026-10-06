@@ -13,11 +13,15 @@ export const SCENES = [
 // 2) Bilgilendirme bittikten sonra ekranın ortasında, kelime kelime beliren cümleler.
 export const STATEMENTS = [
   { t0: 21.9, t1: 26.1, lines: [{ text: 'İYTE yolculuğunda karşılaştığın' }, { text: 'her şey sana bir şey öğretecek.' }] },
-  { t0: 26.7, t1: 30.9, big: true, lines: [{ text: 'Bir sonraki hikâye…', grad: true }, { text: 'seninki, {name}.', delay: 1.3 }] },
+  { t0: 26.6, t1: 31.4, big: true, lines: [
+    { text: 'Bir sonraki hikâye' },
+    { text: 'belki de senin hikâyendir,', delay: 0.5 },
+    { text: '{name}…', name: true, delay: 1.6 },
+  ] },
 ];
 
-// 3) Sonra yazısız obje şovu; kamera sihirli noktaya oturur ve portre belirir.
-// Objelerin portreye toplanması bu aralıkta olur.
-export const ASSEMBLE = { t0: 0.8, t1: 13 };
-// Kameranın sihirli noktaya oturduğu an.
-export const ALIGN_AT = 35.4;
+// 3) Portrenin kurulması: objeler dağınık buluttan tek tek, giderek hızlanarak
+// yerlerine uçar (t0'dan itibaren span saniye). Kamera bu sırada yavaşça
+// sihirli noktaya yaklaşır ve ALIGN_AT'te tam oturur.
+export const BUILD = { t0: 31.6, span: 8.5 };
+export const ALIGN_AT = 41.8;

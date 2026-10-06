@@ -11,7 +11,7 @@ import { preparePortrait, fallbackPortrait, HeadTracker } from './vision.js';
 import { ARCHETYPES, ORDER } from '../../quiz/quiz-data.js';
 import { decodeToken } from '../../quiz/token.js';
 import { CONFIG } from '../config.js';
-import { SCENES, STATEMENTS, ASSEMBLE, ALIGN_AT } from './story.js';
+import { SCENES, STATEMENTS, BUILD, ALIGN_AT } from './story.js';
 import { CameraPath } from './camera-path.js';
 import { QRScanner } from './scanner.js';
 import { composeCard, uploadCard } from './share.js';
@@ -197,12 +197,12 @@ async function start(data) {
     screenW: W, screenH: H, sMin: 0.5, sMax: 2.3, decoyRatio: 0.16, heroRatio: 0.006,
     seed: (Math.random() * 1e9) | 0, archetype: data.archetype, archColor: a.color, ...portraitLayout(),
   });
-  ana.setChoreography(data.archetype);
+  ana.setChoreography(data.archetype, BUILD.span);
   ana.group.visible = true;
 
   // 4) Gösteri
   const C = new THREE.Vector3(ana.portrait.x, ana.portrait.y, 0).sub(E).multiplyScalar(1.4).add(E);
-  s.path = new CameraPath(data.archetype, E, C, H, ALIGN_AT, FINAL_FOV);
+  s.path = new CameraPath(data.archetype, E, C, H, BUILD.t0, ALIGN_AT, FINAL_FOV);
   s.t0 = performance.now() / 1000;
   s.scene = -1; s.stmt = -1;
   $('sayBox').innerHTML = ''; $('say').classList.remove('out');
@@ -277,15 +277,13 @@ function setTitle(el, text) {
 function updateShow(now) {
   const s = session;
   const t = now - s.t0;
-  const prog = clamp((t - ASSEMBLE.t0) / (ASSEMBLE.t1 - ASSEMBLE.t0), 0, 1);
   const cam = s.path.sample(t);
   setCamera(cam);
-  // Objeler havada süzülür; hizalanmadan önce sakinleşip durur.
-  const wobble = 1 - ease(clamp((t - (ALIGN_AT - 6)) / 5, 0, 1));
-  ana.layout(E, prog, wobble * 0.6, t);
+  // Objeler dağınık bulutta süzülür; BUILD.t0'dan itibaren tek tek portreye yerleşir.
+  ana.layout(E, t - BUILD.t0, 0, t);
 
-  // Uçuşta derinlik sisi; hizalanırken kalkar ki portrenin renkleri doğru görünsün.
-  const fogK = 1 - ease(clamp((t - (ALIGN_AT - 4)) / 3.5, 0, 1));
+  // Uçuşta derinlik sisi; kurulma başlamadan kalkar ki portrenin renkleri doğru görünsün.
+  const fogK = 1 - ease(clamp((t - (BUILD.t0 - 4)) / 3.5, 0, 1));
   scene.fog.near = 200 + (1 - fogK) * 1e5;
   scene.fog.far = 700 + (1 - fogK) * 2e5;
 
@@ -295,6 +293,8 @@ function updateShow(now) {
     const cap = $('caption');
     cap.classList.remove('show');
     [...$('capDots').children].forEach((d, i) => d.classList.toggle('on', i === idx));
+    // Bilgilendirme bitince ilerleme noktaları da kaybolur.
+    $('capDots').classList.toggle('gone', t > SCENES[SCENES.length - 1].t1);
     if (idx >= 0) {
       const sc = SCENES[idx];
       const fill = (x) => x.replace('{name}', s.name || 'sen');
@@ -320,23 +320,13 @@ function updateShow(now) {
       box.innerHTML = st.lines.map((ln) => {
         const base = ln.delay || 0;
         const words = ln.text.replace('{name}', s.name || 'sen').split(' ');
-        return `<span class="ln${ln.grad ? ' grad' : ''}">` + words.map((w, i) =>
+        return `<span class="ln${ln.name ? ' name' : ''}">` + words.map((w, i) =>
           `<span class="w" style="animation-delay:${(base + (k++, i) * 0.16).toFixed(2)}s">${escapeHtml(w)}</span>`).join(' ') + '</span>';
       }).join('');
     }
   }
   if (cam.aligned && !s.flashed) { s.flashed = true; flash(0.55, 1.4); }
   if (t >= CONFIG.show) enterEnd();
-}
-
-/** Kişiye özel, okunaklı davetiye numarası (ad + zaman). */
-function invitationNo(s) {
-  let h = 0x811c9dc5;
-  for (const ch of `${s.name}|${s.time || Date.now()}`) { h ^= ch.charCodeAt(0); h = Math.imul(h, 0x01000193); }
-  const abc = 'ABCDEFGHJKLMNPRSTUVYZ23456789';
-  let code = '';
-  for (let i = 0; i < 5; i++) { code += abc[(h >>> 0) % abc.length]; h = Math.imul(h ^ (h >>> 13), 0x5bd1e995); }
-  return `TGA-26-${code}`;
 }
 
 function confetti() {
@@ -365,7 +355,6 @@ function enterEnd() {
   $('tName').textContent = s.name;
   $('tDates').textContent = '📅 ' + ac.dates;
   $('tPlace').textContent = '📍 ' + ac.place;
-  $('tNo').textContent = invitationNo(s);
   $('eDeadline').textContent = ac.deadline;
   $('eScan').textContent = 'Okut, yerini ayırt';
   $('eQr').textContent = '…';
@@ -386,9 +375,8 @@ async function prepareShare(shot) {
   // (orada başvuru bağlantısı da var).
   let url = CONFIG.academy.applyUrl;
   try {
-    s.no = $('tNo').textContent;
-    const card = composeCard(shot, { name: s.name, arch: s.arch, no: s.no });
-    const shared = s.consent ? await withTimeout(uploadCard(card, { name: s.name, key: s.key, no: s.no }), 8000) : null;
+    const card = composeCard(shot, { name: s.name, arch: s.arch });
+    const shared = s.consent ? await withTimeout(uploadCard(card, { name: s.name, key: s.key }), 8000) : null;
     if (shared) { url = shared; $('eScan').textContent = 'Okut: davetiyen ve portren telefonunda'; }
   } catch (e) {
     console.warn('Paylaşım hazırlanamadı', e);
@@ -402,7 +390,7 @@ const escapeHtml = (x) => String(x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', 
 function updateEnd(now) {
   setCamera({ pos: E, fov: FINAL_FOV, aligned: true });
   // Bitişte portre çok hafif nefes alır gibi kıpırdar
-  ana.layout(E, 1, 0.025 * (1 + Math.sin(now * 1.3)), now);
+  ana.layout(E, Infinity, 0.025 * (1 + Math.sin(now * 1.3)), now);
   if (now >= session.endAt) enterIdle();
 }
 
