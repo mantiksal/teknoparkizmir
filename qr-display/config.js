@@ -1,7 +1,7 @@
 // 1. monitör (İYTE Muhafızı) ayarları.
 window.MUHAFIZ = {
   // QR'ın açacağı terminal arayüzünün adresi
-  url: 'https://example.com/muhafiz',
+  url: 'https://bilfest.dijitalsavunma.org/muhafiz',
 
   // Sürpriz hediyeler: hediye adı yerine "SÜRPRİZ" yazılırsa adı gizli kalır.
   gifts: [
