@@ -457,7 +457,7 @@ export class AnamorphScene {
     all.forEach((it, i) => {
       const r = N > 1 ? i / (N - 1) : 0;
       it.tStart = span * Math.cbrt(r);                    // ivmelenen akış
-      it.dur = 0.75 + 1.1 * Math.pow(1 - r, 6);           // ilk objeler daha yavaş ve görünür uçar
+      it.dur = 1.0 + 1.3 * Math.pow(1 - r, 6);            // ilk objeler daha yavaş ve görünür uçar
     });
     this.choreo = { kind, span, end: span + 2 };
     this.lastE = null;
@@ -495,9 +495,8 @@ export class AnamorphScene {
           const sz0 = C.z + it.oz + Math.cos(time * 0.3 + it.r1 * 9) * 3;
           _eTmp.set(it.r1 * 6.3 + time * (it.r2 - 0.5) * 0.9, it.r2 * 6.3 + time * (it.r3 - 0.5) * 0.9, it.r3 * 6.3);
           _q2.setFromEuler(_eTmp);
-          let e;
-          if (ch?.kind === 'firestarter') { const c1 = 1.7, c3 = c1 + 1; e = 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); }
-          else e = 1 - Math.pow(1 - p, 3);
+          // Başı ve sonu ivmesiz: obje süzülme hızından yavaşça kopar, yerine yumuşakça oturur.
+          const e = p * p * p * (p * (p * 6 - 15) + 10);
           // Kavisli uçuş: yolun ortasında kameraya doğru hafif bir yay
           const arc = Math.sin(Math.min(1, e) * Math.PI) * sz * 2.5;
           _dummy.position.set(sx + (_v.x - sx) * e, sy + (_v.y - sy) * e, sz0 + (_v.z - sz0) * e + arc);

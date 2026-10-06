@@ -34,49 +34,53 @@ const PATHS = {
 };
 
 const FLIGHT_FOV = 50;
+const smoother = (x) => x * x * x * (x * (x * 6 - 15) + 10);   // başı ve sonu ivmesiz
+const _m = new THREE.Matrix4();
+const _up = new THREE.Vector3(0, 1, 0);
 
 export class CameraPath {
   /**
-   * @param kind      arketip anahtarı
-   * @param E         sihirli nokta (kamera burada biter)
-   * @param C         obje bulutunun merkezi
-   * @param H         ölçek (perde yüksekliği)
-   * @param flightEnd uçuşun bittiği, yaklaşmanın başladığı saniye
-   * @param alignAt   kameranın E'ye oturduğu saniye
-   * @param finalFov  E'den perdeyi tam kaplayan dikey görüş açısı (derece)
+   * Kamera akışı tüm gösteri boyunca sürer; blendStart'tan alignAt'e kadar akış
+   * ile sihirli nokta (E) arasında konum, yön ve zoom birlikte, ivmesiz karışır.
+   * Böylece portre kurulurken hiçbir ani zoom, dönüş ya da sıçrama olmaz.
+   * @param kind       arketip anahtarı
+   * @param E          sihirli nokta (kamera burada biter)
+   * @param C          obje bulutunun merkezi
+   * @param H          ölçek (perde yüksekliği)
+   * @param blendStart hedefe yumuşak geçişin başladığı saniye
+   * @param alignAt    kameranın E'ye oturduğu saniye
+   * @param finalFov   E'den perdeyi tam kaplayan dikey görüş açısı (derece)
    */
-  constructor(kind, E, C, H, flightEnd, alignAt, finalFov) {
+  constructor(kind, E, C, H, blendStart, alignAt, finalFov) {
     const keys = PATHS[kind] || PATHS.default;
     const k = H * 0.5;
-    const lastFlight = flightEnd - 3;
-    // Yaklaşmanın başladığı nokta: E'nin hemen arkası, perdeye düz bakıyor.
-    this.pre = E.clone().add(new THREE.Vector3(0, H * 0.03, H * 0.38));
-    const far = new THREE.Vector3(0, 0, -10000).add(E);
-    this.times = keys.map(([f]) => f * lastFlight).concat([flightEnd]);
-    const pos = keys.map(([, p]) => new THREE.Vector3(...p).multiplyScalar(k).add(C)).concat([this.pre.clone()]);
-    const tgt = keys.map(([, , t]) => (t ? new THREE.Vector3(...t).multiplyScalar(k).add(C) : C.clone())).concat([far]);
+    this.times = keys.map(([f]) => f * alignAt);
+    const pos = keys.map(([, p]) => new THREE.Vector3(...p).multiplyScalar(k).add(C));
+    const tgt = keys.map(([, , t]) => (t ? new THREE.Vector3(...t).multiplyScalar(k).add(C) : C.clone()));
     this.posCurve = new THREE.CatmullRomCurve3(pos, false, 'centripetal');
     this.tgtCurve = new THREE.CatmullRomCurve3(tgt, false, 'centripetal');
-    Object.assign(this, { E, far, flightEnd, alignAt, finalFov, n: pos.length });
+    Object.assign(this, { E, blendStart, alignAt, finalFov, n: pos.length });
   }
 
-  /** @returns {{ pos, target, fov, aligned }} */
+  /** @returns {{ pos, quat, fov, aligned }} */
   sample(t) {
-    if (t >= this.alignAt) return { pos: this.E.clone(), target: null, fov: this.finalFov, aligned: true };
-    if (t >= this.flightEnd) {
-      // Portre kurulurken yavaş, sakin yaklaşma; sona doğru iyice yavaşlar.
-      const f = (t - this.flightEnd) / (this.alignAt - this.flightEnd);
-      const e = 1 - Math.pow(1 - f, 2.4);
-      return { pos: this.pre.clone().lerp(this.E, e), target: this.far, fov: this.finalFov, aligned: false };
-    }
+    if (t >= this.alignAt) return { pos: this.E.clone(), quat: new THREE.Quaternion(), fov: this.finalFov, aligned: true };
+    // Akış (sabit hızda, eğri boyunca)
     const ts = this.times;
     let i = 0;
     while (i < ts.length - 2 && t > ts[i + 1]) i++;
-    let f = Math.min(1, Math.max(0, (t - ts[i]) / (ts[i + 1] - ts[i])));
-    const last = i === ts.length - 2;
-    if (last) f = 1 - Math.pow(1 - f, 3);
+    const f = Math.min(1, Math.max(0, (t - ts[i]) / (ts[i + 1] - ts[i])));
     const u = (i + f) / (this.n - 1);
-    const fov = last ? FLIGHT_FOV + (this.finalFov - FLIGHT_FOV) * f : FLIGHT_FOV;
-    return { pos: this.posCurve.getPoint(u), target: this.tgtCurve.getPoint(u), fov, aligned: false };
+    const pos = this.posCurve.getPoint(u);
+    const quat = new THREE.Quaternion().setFromRotationMatrix(_m.lookAt(pos, this.tgtCurve.getPoint(u), _up));
+    let fov = FLIGHT_FOV;
+    // Hedefe yumuşak karışım
+    if (t > this.blendStart) {
+      const w = smoother((t - this.blendStart) / (this.alignAt - this.blendStart));
+      pos.lerp(this.E, w);
+      quat.slerp(new THREE.Quaternion(), w);
+      fov = FLIGHT_FOV + (this.finalFov - FLIGHT_FOV) * w;
+    }
+    return { pos, quat, fov, aligned: false };
   }
 }

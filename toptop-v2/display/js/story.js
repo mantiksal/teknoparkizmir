@@ -20,8 +20,11 @@ export const STATEMENTS = [
   ] },
 ];
 
-// 3) Portrenin kurulması: objeler dağınık buluttan tek tek, giderek hızlanarak
-// yerlerine uçar (t0'dan itibaren span saniye). Kamera bu sırada yavaşça
-// sihirli noktaya yaklaşır ve ALIGN_AT'te tam oturur.
-export const BUILD = { t0: 31.6, span: 8.5 };
-export const ALIGN_AT = 41.8;
+// 3) Cümleler bitince çekilen fotoğraf köşeye "yapışır" (STICK_AT).
+// 4) Sonra portre kurulur: objeler dağınık buluttan tek tek, giderek hızlanarak
+// yerlerine uçar (BUILD.t0'dan itibaren span saniye). Kamera akışına devam eder,
+// CAMERA_BLEND'den itibaren yumuşakça sihirli noktaya karışır ve ALIGN_AT'te tam oturur.
+export const STICK_AT = 31.7;
+export const BUILD = { t0: 33.2, span: 8.5 };
+export const CAMERA_BLEND = 30;
+export const ALIGN_AT = 43.2;

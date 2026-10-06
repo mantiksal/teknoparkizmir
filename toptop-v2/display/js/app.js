@@ -11,7 +11,7 @@ import { preparePortrait, fallbackPortrait, HeadTracker } from './vision.js';
 import { ARCHETYPES, ORDER } from '../../quiz/quiz-data.js';
 import { decodeToken } from '../../quiz/token.js';
 import { CONFIG } from '../config.js';
-import { SCENES, STATEMENTS, BUILD, ALIGN_AT } from './story.js';
+import { SCENES, STATEMENTS, STICK_AT, BUILD, CAMERA_BLEND, ALIGN_AT } from './story.js';
 import { CameraPath } from './camera-path.js';
 import { QRScanner } from './scanner.js';
 import { composeCard, uploadCard } from './share.js';
@@ -56,9 +56,10 @@ function portraitLayout() {
   return vertical ? { portraitH: H * 0.44, portraitY: H * 0.07, portraitX: 0 } : { portraitH: H * 0.86, portraitY: 0, portraitX: -W * 0.22 };
 }
 
-function setCamera({ pos, target, fov, aligned }) {
+function setCamera({ pos, target, quat, fov, aligned }) {
   camera.position.copy(pos);
-  if (aligned || !target) camera.quaternion.identity();
+  if (quat) camera.quaternion.copy(quat);
+  else if (aligned || !target) camera.quaternion.identity();
   else camera.lookAt(target);
   if (camera.fov !== fov) { camera.fov = fov; camera.updateProjectionMatrix(); }
 }
@@ -144,6 +145,7 @@ function enterIdle() {
   scene.fog.near = 1e5; scene.fog.far = 2e5;
   ana.group.visible = false;
   $('idle').classList.remove('hit');
+  $('sticker').classList.remove('on');
   $('end').classList.remove('invite');
   showLayer('idle');
   if (promoVideo.src) promoVideo.play().catch(() => {});
@@ -204,7 +206,7 @@ async function start(data) {
 
   // 4) Gösteri
   const C = new THREE.Vector3(ana.portrait.x, ana.portrait.y, 0).sub(E).multiplyScalar(1.4).add(E);
-  s.path = new CameraPath(data.archetype, E, C, H, BUILD.t0, ALIGN_AT, FINAL_FOV);
+  s.path = new CameraPath(data.archetype, E, C, H, CAMERA_BLEND, ALIGN_AT, FINAL_FOV);
   s.t0 = performance.now() / 1000;
   s.scene = -1; s.stmt = -1;
   $('sayBox').innerHTML = ''; $('say').classList.remove('out');
@@ -285,7 +287,7 @@ function updateShow(now) {
   ana.layout(E, t - BUILD.t0, 0, t);
 
   // Uçuşta derinlik sisi; kurulma başlamadan kalkar ki portrenin renkleri doğru görünsün.
-  const fogK = 1 - ease(clamp((t - (BUILD.t0 - 4)) / 3.5, 0, 1));
+  const fogK = 1 - ease(clamp((t - CAMERA_BLEND) / (BUILD.t0 + 2 - CAMERA_BLEND), 0, 1));
   scene.fog.near = 200 + (1 - fogK) * 1e5;
   scene.fog.far = 700 + (1 - fogK) * 2e5;
 
@@ -327,6 +329,8 @@ function updateShow(now) {
       }).join('');
     }
   }
+  // Fotoğraf kurulmadan önce köşeye yapışır ve bitiş ekranında da kalır.
+  if (t >= STICK_AT && !s.stuck) { s.stuck = true; $('ePhoto').src = s.photo || ''; $('sticker').classList.add('on'); }
   if (cam.aligned && !s.flashed) { s.flashed = true; flash(0.55, 1.4); }
   if (t >= CONFIG.show) enterEnd();
 }
@@ -352,7 +356,6 @@ function enterEnd() {
   setState('end');
   const s = session, a = s.arch, ac = CONFIG.academy;
   $('eArch').textContent = `${a.emoji} ${a.name}`;
-  $('ePhoto').src = s.photo || '';
   $('eWho').textContent = `girişimcisi ${s.name}`;
   $('tTitle').textContent = ac.title;
   $('tName').textContent = s.name;
