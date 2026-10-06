@@ -143,7 +143,7 @@ function enterIdle() {
   session = null;
   scene.fog.near = 1e5; scene.fog.far = 2e5;
   ana.group.visible = false;
-  $('media').classList.remove('hit');
+  $('idle').classList.remove('hit');
   $('end').classList.remove('invite');
   showLayer('idle');
   if (promoVideo.src) promoVideo.play().catch(() => {});
@@ -162,7 +162,7 @@ async function start(data) {
   const a = ARCHETYPES[data.archetype];
   const s = session = { ...data, arch: a, key: data.archetype };
   document.documentElement.style.setProperty('--arch', a.color);
-  $('media').classList.add('hit');
+  $('idle').classList.add('hit');
   promoVideo.pause();   // video yalnızca bekleme ekranında
 
   // 1) Karşılama
@@ -470,7 +470,7 @@ window.__dbg = { ana, camera, E, get state() { return state; }, showT0: () => se
     await faceTracker.setMode('face');
   } catch (e) {
     console.error(e);
-    $('media').querySelector('.lens span').textContent = 'Kamera açılamadı';
+    document.querySelector('#idle .cam span').textContent = 'Kamera açılamadı';
   }
   scanLoop();
   // Modelleri ısıt: ilk katılımcıda bekleme olmasın.

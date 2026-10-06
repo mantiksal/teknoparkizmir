@@ -25,7 +25,7 @@ export const CONFIG = {
   // Süreler (saniye)
   greet: 4,
   countdown: 5,
-  show: 42,       // Teknopark hikâyesi + cümleler + obje şovu + portrenin oluşması
+  show: 38,       // Teknopark hikâyesi + cümleler + obje şovu + portrenin oluşması
   end: 30,        // unvan + davetiye (QR okutma süresi)
   sameTokenCooldown: 120,  // aynı QR tekrar okutulursa yok sayılma süresi
 };
