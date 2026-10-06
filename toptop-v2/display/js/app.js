@@ -1,12 +1,12 @@
 // Stand ekranı (2. monitör).
-// Akış: bekleme (canlı obje aynası + QR) → karşılama → 5 sn fotoğraf → Teknopark
-// hikâyesi eşliğinde 3B objelerin uçuşu ve portrenin oluşması → bitiş (15 sn) → bekleme.
+// Akış: bekleme (tanıtım videosu + QR) → karşılama → 5 sn fotoğraf → Teknopark
+// hikâyesi eşliğinde 3B objelerin uçuşu ve portrenin oluşması → unvan + davetiye (15 sn) → bekleme.
+// Bekleme ekranı sürprizi bozmasın diye objelerden hiçbir şey göstermez.
 import * as THREE from '../vendor/three/three.module.js';
 import { RoomEnvironment } from '../vendor/three/addons/RoomEnvironment.js';
 import { builtinSprites, loadCustomSprites } from './objects.js';
 import { ObjectLibrary, setupLighting } from './objects3d.js';
 import { AnamorphScene, analyzeTarget } from './anamorph.js';
-import { MirrorWall } from './mirror.js';
 import { preparePortrait, fallbackPortrait, HeadTracker } from './vision.js';
 import { ARCHETYPES, ORDER } from '../../quiz/quiz-data.js';
 import { decodeToken } from '../../quiz/token.js';
@@ -35,7 +35,6 @@ setupLighting(renderer, scene, RoomEnvironment);
 const library = new ObjectLibrary();
 const ana = new AnamorphScene(scene, library);
 ana.setOptions({ backs: false, wires: false });
-const mirror = new MirrorWall(scene, library);
 
 // Sanal perde: yükseklik H=100 birim; sihirli nokta perdenin tam karşısında.
 const H = 100, EZ = 160;
@@ -43,32 +42,11 @@ const E = new THREE.Vector3(0, 0, EZ);
 const FINAL_FOV = 2 * Math.atan(H / 2 / EZ) * 180 / Math.PI;
 let W = H, vertical = true;
 
-/** CSS piksel dikdörtgeni → z=0 düzleminde dünya dikdörtgeni. */
-function pxToWorld(left, top, width, height) {
-  const k = H / innerHeight;
-  return { x: (left + width / 2 - innerWidth / 2) * k, y: (innerHeight / 2 - top - height / 2) * k, w: width * k, h: height * k };
-}
-
-function layoutMirror() {
-  const u = Math.min(innerWidth / 100, innerHeight * 0.005625);
-  let r;
-  if (vertical) r = { left: 5 * u, top: 66 * u, width: innerWidth - 10 * u, height: 58 * u };
-  else r = { left: innerWidth * 0.04, top: innerHeight * 0.1, width: innerWidth * 0.44, height: innerHeight * 0.8 };
-  Object.assign($('mirrorFrame').style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
-  const pw = r.width * 0.4;
-  promoSlots.idle = { left: r.left + 2.5 * u, top: r.top + r.height - pw * 9 / 16 - 2.5 * u, width: pw };
-  promoSlots.show = vertical ? { left: innerWidth - 40 * u, top: 4.5 * u, width: 36 * u }
-    : { left: innerWidth * 0.74, top: innerHeight * 0.05, width: innerWidth * 0.22 };
-  placePromo();
-  mirror.build(sprites, pxToWorld(r.left, r.top, r.width, r.height), vertical ? 34 : 36);
-}
-
 function resize() {
   renderer.setSize(innerWidth, innerHeight, false);
   camera.aspect = innerWidth / innerHeight;
   W = H * camera.aspect;
   vertical = camera.aspect < 1;
-  if (sprites.length) layoutMirror();
 }
 let resizeT;
 addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(resize, 200); });
@@ -134,21 +112,7 @@ function drawQR(el, text, cellPx = 8) {
 
 // ------------------------------------------------------------------ tanıtım videosu
 
-const promo = $('promo'), promoVideo = $('promoVideo');
-const promoSlots = { idle: null, show: null };
-for (const ev of ['playing', 'canplay', 'seeked']) promoVideo.addEventListener(ev, () => placePromo());
-let promoSlot = 'idle', promoVisible = false;
-
-function placePromo() {
-  const s = promoSlots[promoSlot];
-  if (!s) return;
-  Object.assign(promo.style, { left: s.left + 'px', top: s.top + 'px', width: s.width + 'px' });
-  promo.classList.toggle('on', promoVisible && promoVideo.readyState >= 2);
-}
-function setPromo(slot, visible) {
-  if (slot === promoSlot && visible === promoVisible) return;
-  promoSlot = slot; promoVisible = visible; placePromo();
-}
+const promoVideo = $('promoVideo');
 
 async function startPromo() {
   const list = CONFIG.promoVideo || [];
@@ -161,7 +125,7 @@ async function startPromo() {
     if (!ok) continue;
     // Her açılışta farklı bir yerden başla.
     promoVideo.currentTime = Math.random() * Math.max(0, promoVideo.duration - 5);
-    promoVideo.play().catch(() => {});
+    if (state === 'idle') promoVideo.play().catch(() => {});
     return;
   }
 }
@@ -174,28 +138,19 @@ let sprites = [];
 const layers = ['idle', 'greet', 'capture', 'proc', 'caption', 'end'];
 function showLayer(...on) { for (const id of layers) $(id).classList.toggle('on', on.includes(id)); }
 
-// Ayna geçişi: 0 = yerinde, 1 = dağılmış
-const burst = { from: 0, to: 0, t0: 0, dur: 1 };
-function burstTo(to, dur) { Object.assign(burst, { from: mirror.burst, to, t0: performance.now() / 1000, dur }); }
-
 function enterIdle() {
   setState('idle');
   session = null;
   scene.fog.near = 1e5; scene.fog.far = 2e5;
   ana.group.visible = false;
-  mirror.visible = true;
-  burstTo(0, 1.4);
-  $('mirrorFrame').classList.remove('hit');
+  $('media').classList.remove('hit');
+  $('end').classList.remove('invite');
   showLayer('idle');
-  setPromo('idle', true);
+  if (promoVideo.src) promoVideo.play().catch(() => {});
 }
 
-function updateIdleLike(now) {
+function updateIdleLike() {
   setCamera({ pos: E, fov: FINAL_FOV, aligned: true });
-  const k = clamp((now - burst.t0) / burst.dur, 0, 1);
-  mirror.burst = burst.from + (burst.to - burst.from) * ease(k);
-  if (mirror.visible) mirror.update(scanVideo, now);
-  if (mirror.burst > 0.98 && burst.to === 1) mirror.visible = false;
 }
 
 // ------------------------------------------------------------------ deneyim
@@ -207,10 +162,10 @@ async function start(data) {
   const a = ARCHETYPES[data.archetype];
   const s = session = { ...data, arch: a, key: data.archetype };
   document.documentElement.style.setProperty('--arch', a.color);
-  $('mirrorFrame').classList.add('hit');
+  $('media').classList.add('hit');
+  promoVideo.pause();   // video yalnızca bekleme ekranında
 
-  // 1) Karşılama — video köşeye kayar
-  setPromo('show', true);
+  // 1) Karşılama
   setState('greet');
   $('gName').textContent = (data.name || 'Girişimci') + '!';
   showLayer('greet');
@@ -220,7 +175,6 @@ async function start(data) {
   // 2) Fotoğraf
   setState('capture');
   showLayer('capture');
-  burstTo(1, 0.9);
   const shot = await capturePhoto();
   if (session !== s) return;
 
@@ -245,7 +199,6 @@ async function start(data) {
   });
   ana.setChoreography(data.archetype);
   ana.group.visible = true;
-  mirror.visible = false;
 
   // 4) Gösteri
   const C = new THREE.Vector3(ana.portrait.x, ana.portrait.y, 0).sub(E).multiplyScalar(1.4).add(E);
@@ -353,23 +306,54 @@ function updateShow(now) {
       }, 280);
     }
   }
-  // Portre oluşmadan önce video söner: doruk anı dikkat bölünmeden izlensin.
-  if (t > ALIGN_AT - 6) setPromo('show', false);
   if (cam.aligned && !s.flashed) { s.flashed = true; flash(0.55, 1.4); }
   if (t >= CONFIG.show) enterEnd();
 }
 
+/** Kişiye özel, okunaklı davetiye numarası (ad + zaman). */
+function invitationNo(s) {
+  let h = 0x811c9dc5;
+  for (const ch of `${s.name}|${s.time || Date.now()}`) { h ^= ch.charCodeAt(0); h = Math.imul(h, 0x01000193); }
+  const abc = 'ABCDEFGHJKLMNPRSTUVYZ23456789';
+  let code = '';
+  for (let i = 0; i < 5; i++) { code += abc[(h >>> 0) % abc.length]; h = Math.imul(h ^ (h >>> 13), 0x5bd1e995); }
+  return `TGA-26-${code}`;
+}
+
+function confetti() {
+  const box = $('confetti');
+  box.innerHTML = '';
+  const colors = ['#80CD36', '#5C8CC8', '#EC7C00', '#f3c969', '#ffffff'];
+  for (let i = 0; i < 90; i++) {
+    const c = document.createElement('i');
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.background = colors[i % colors.length];
+    c.style.setProperty('--dx', (Math.random() - 0.5) * 30 + 'vw');
+    c.style.setProperty('--rot', (Math.random() * 1440 - 720) + 'deg');
+    c.style.animationDuration = 2.4 + Math.random() * 2 + 's';
+    c.style.animationDelay = Math.random() * 0.6 + 's';
+    box.appendChild(c);
+  }
+  setTimeout(() => { box.innerHTML = ''; }, 6000);
+}
+
 function enterEnd() {
   setState('end');
-  const s = session, a = s.arch;
+  const s = session, a = s.arch, ac = CONFIG.academy;
   $('eArch').textContent = `${a.emoji} ${a.name}`;
   $('eWho').textContent = `girişimcisi ${s.name}`;
-  $('eInvite').innerHTML = `Seni <span style="color:var(--green)">${CONFIG.academy.title}</span>'ne bekliyoruz, ${escapeHtml(s.name)}!`;
-  $('eNote').textContent = CONFIG.academy.note;
+  $('tTitle').textContent = ac.title;
+  $('tName').textContent = s.name;
+  $('tDates').textContent = '📅 ' + ac.dates;
+  $('tPlace').textContent = '📍 ' + ac.place;
+  $('tNo').textContent = invitationNo(s);
+  $('eDeadline').textContent = ac.deadline;
+  $('eScan').textContent = 'Okut, yerini ayırt';
   $('eQr').textContent = '…';
-  $('eShareT').textContent = 'Portreni Instagram\'da paylaş';
-  $('eShareS').textContent = 'Paylaşım bağlantısı hazırlanıyor…';
+  $('end').classList.remove('invite');
   showLayer('end');
+  // Önce unvan ve portre; 1,4 sn sonra davetiye konfetiyle gelir.
+  setTimeout(() => { if (session === s) { $('end').classList.add('invite'); confetti(); } }, 1400);
   const bar = $('eBar');
   bar.style.transition = 'none'; bar.style.transform = 'scaleX(1)';
   requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.transition = `transform ${CONFIG.end}s linear`; bar.style.transform = 'scaleX(0)'; }));
@@ -379,22 +363,19 @@ function enterEnd() {
 
 async function prepareShare(shot) {
   const s = session;
+  // Davetiyenin QR'ı başvuru sayfasına gider; portre paylaşımı açıksa paylaşım sayfasına
+  // (orada başvuru bağlantısı da var).
+  let url = CONFIG.academy.applyUrl;
   try {
-    const card = composeCard(shot, { name: s.name, arch: s.arch });
-    const url = s.consent ? await withTimeout(uploadCard(card, { name: s.name, key: s.key }), 8000) : null;
-    if (s !== session) return;
-    if (url) {
-      drawQR($('eQr'), url, 6);
-      $('eShareS').textContent = 'QR\'ı okut, portreni indir ya da hikâyende paylaş · ' + CONFIG.academy.instagram;
-      return;
-    }
+    s.no = $('tNo').textContent;
+    const card = composeCard(shot, { name: s.name, arch: s.arch, no: s.no });
+    const shared = s.consent ? await withTimeout(uploadCard(card, { name: s.name, key: s.key, no: s.no }), 8000) : null;
+    if (shared) { url = shared; $('eScan').textContent = 'Okut: davetiyen ve portren telefonunda'; }
   } catch (e) {
     console.warn('Paylaşım hazırlanamadı', e);
   }
   if (s !== session) return;
-  drawQR($('eQr'), CONFIG.quizUrl, 6);
-  $('eShareT').textContent = 'Arkadaşlarını da teste davet et!';
-  $('eShareS').textContent = `Bizi takip et: ${CONFIG.academy.instagram}`;
+  drawQR($('eQr'), url, 6);
 }
 
 const escapeHtml = (x) => String(x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -414,7 +395,7 @@ function frame(ms) {
   try {
     if (state === 'show') updateShow(now);
     else if (state === 'end') updateEnd(now);
-    else updateIdleLike(now);
+    else updateIdleLike();
     // Bekçi: herhangi bir hazırlık aşaması takılırsa bekleme ekranına dön.
     if (['greet', 'capture', 'processing'].includes(state) && now - stateSince > 25) {
       console.warn('Bekçi: takılan aşama sıfırlandı:', state);
@@ -436,7 +417,7 @@ function frame(ms) {
   fpsN++;
   if (now - fpsT > 0.5) {
     fps = fpsN / (now - fpsT); fpsN = 0; fpsT = now;
-    $('debug').textContent = `durum: ${state}\nfps: ${fps.toFixed(0)}\nobje: ${ana.count} · ayna: ${mirror.cols}×${mirror.rows}\nQR: ${scanner.engine || '-'}`;
+    $('debug').textContent = `durum: ${state}\nfps: ${fps.toFixed(0)}\nobje: ${ana.count}\nQR: ${scanner.engine || '-'}`;
   }
   requestAnimationFrame(frame);
 }
@@ -453,7 +434,7 @@ addEventListener('keydown', (e) => {
   } else if (e.key === 'Escape' && state !== 'idle') enterIdle();
 });
 window.__start = start;   // otomatik test için
-window.__dbg = { ana, mirror, camera, E, get state() { return state; } };
+window.__dbg = { ana, camera, E, get state() { return state; } };
 
 // ------------------------------------------------------------------ başlat
 
@@ -470,7 +451,7 @@ window.__dbg = { ana, mirror, camera, E, get state() { return state; } };
     await faceTracker.setMode('face');
   } catch (e) {
     console.error(e);
-    $('mirrorFrame').querySelector('span').textContent = 'Kamera açılamadı: ' + e.message;
+    $('media').querySelector('.lens span').textContent = 'Kamera açılamadı';
   }
   scanLoop();
   // Modelleri ısıt: ilk katılımcıda bekleme olmasın.

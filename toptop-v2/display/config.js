@@ -7,16 +7,20 @@ export const CONFIG = {
   // 'supabase' için: herkese açık bir storage bucket + anon anahtarla yükleme izni.
   share: { provider: 'none', supabaseUrl: '', anonKey: '', bucket: 'portraits' },
 
+  // Bitiş ekranındaki davetiye. Etkinlik dönemine göre güncelleyin.
   academy: {
     title: 'Teknogirişim Akademisi',
-    note: 'Güz dönemi 15–16 Ekim · Son başvuru 13 Ekim',
-    url: 'teknoparkizmir.com.tr',
+    dates: '15–16 Ekim 2026',
+    place: 'Teknopark İzmir',
+    deadline: 'Son başvuru: 13 Ekim',
+    // Davetiyedeki QR buraya gider (program sayfası; başvuru bağlantısı orada).
+    applyUrl: 'https://teknoparkizmir.com.tr/tr/projeler/teknogirisim-akademisi/',
     instagram: '@teknoparkizmir',
   },
 
   // Tanıtım videosu: sessiz, döngüde, her açılışta rastgele bir saniyeden başlar.
   // İlk dosya yoksa ikincisi denenir. null yaparsanız video gösterilmez.
-  promoVideo: ['media/iyte-tanitim-540p.mp4', '../iyte-tanitim.mp4'],
+  promoVideo: ['media/iyte-tanitim-540p.mp4', '../iyte-tanitim.mp4'],   // yalnızca bekleme ekranında
 
   // Süreler (saniye)
   greet: 4,

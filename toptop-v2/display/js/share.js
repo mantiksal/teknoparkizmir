@@ -36,12 +36,22 @@ export function composeCard(shot, info) {
   g.fillStyle = '#fff'; g.font = '700 56px Roboto, system-ui, sans-serif';
   g.fillText(`girişimcisi ${info.name}`, W / 2, 300, W - 80);
 
-  g.fillStyle = '#f2f2f5'; g.font = 'italic 400 42px Roboto, system-ui, sans-serif';
-  g.fillText(`“${info.arch.motto}”`, W / 2, 1650, W - 100);
-  g.fillStyle = BRAND.green; g.font = '700 40px Roboto, system-ui, sans-serif';
-  g.fillText(`Teknopark İzmir · ${CONFIG.academy.title}`, W / 2, 1780, W - 80);
-  g.fillStyle = '#9aa0a8'; g.font = '400 36px Roboto, system-ui, sans-serif';
-  g.fillText(CONFIG.academy.instagram, W / 2, 1840);
+  g.fillStyle = '#f2f2f5'; g.font = 'italic 400 40px Roboto, system-ui, sans-serif';
+  g.fillText(`“${info.arch.motto}”`, W / 2, 1585, W - 100);
+  // Davetiye şeridi
+  const y0 = 1630, h = 230, x0 = 60, w = W - 120;
+  const grd = g.createLinearGradient(x0, 0, x0 + w, 0);
+  grd.addColorStop(0, '#80CD36'); grd.addColorStop(0.55, '#5C8CC8'); grd.addColorStop(1, '#EC7C00');
+  g.fillStyle = grd; g.beginPath(); g.roundRect(x0, y0, w, h, 30); g.fill();
+  g.fillStyle = '#181b20'; g.beginPath(); g.roundRect(x0 + 7, y0 + 7, w - 14, h - 14, 24); g.fill();
+  g.fillStyle = '#f3c969'; g.font = '800 30px Roboto, system-ui, sans-serif';
+  g.fillText('🎉 DAVETİYE KAZANDI', W / 2, y0 + 62);
+  g.fillStyle = '#fff'; g.font = '900 56px Roboto, system-ui, sans-serif';
+  g.fillText(CONFIG.academy.title, W / 2, y0 + 128, w - 60);
+  g.fillStyle = '#aab1bb'; g.font = '500 30px Roboto, system-ui, sans-serif';
+  g.fillText(`${CONFIG.academy.dates} · ${CONFIG.academy.place}${info.no ? ' · ' + info.no : ''}`, W / 2, y0 + 180, w - 60);
+  g.fillStyle = '#9aa0a8'; g.font = '400 34px Roboto, system-ui, sans-serif';
+  g.fillText(CONFIG.academy.instagram, W / 2, 1900);
   return c;
 }
 
@@ -58,6 +68,6 @@ export async function uploadCard(card, info) {
   });
   if (!r.ok) throw new Error('yükleme ' + r.status);
   const img = `${s.supabaseUrl}/storage/v1/object/public/${s.bucket}/${name}`;
-  const q = new URLSearchParams({ img, n: info.name, a: info.key });
+  const q = new URLSearchParams({ img, n: info.name, a: info.key, no: info.no || '' });
   return `${CONFIG.quizUrl}share.html?${q}`;
 }

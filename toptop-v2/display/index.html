@@ -7,7 +7,7 @@
 <style>
   :root {
     /* Teknopark İzmir logosundan */
-    --blue: #5C8CC8; --green: #74BC20; --green-2: #80CD36; --orange: #EC7C00; --gray: #586470; --yellow: #FFEF3B;
+    --blue: #5C8CC8; --green: #74BC20; --green-2: #80CD36; --orange: #EC7C00; --gray: #586470; --gold: #f3c969;
     --bg: #141619; --text: #f5f6f8; --muted: #aab1bb; --arch: var(--green);
     --u: min(1vw, 0.5625vh);   /* dikey 9:16 ekranda genişliğin 1/100'ü */
     --grad: linear-gradient(90deg, var(--green-2), var(--blue) 55%, var(--orange));
@@ -35,20 +35,22 @@
   #idle header .iy { height: calc(var(--u) * 15); }
   #idle .headline { position: absolute; top: calc(var(--u) * 27); left: 0; right: 0; text-align: center; }
   #idle h1 { margin: 0; font-weight: 900; line-height: .95; letter-spacing: -.03em; font-size: calc(var(--u) * 13); }
-  #idle .sub { font-size: calc(var(--u) * 4.4); color: #e2e6ea; margin-top: calc(var(--u) * 2.5); font-weight: 500; }
-  #mirrorFrame { position: absolute; border-radius: calc(var(--u) * 4); box-shadow: 0 0 0 calc(var(--u) * .5) rgba(255,255,255,.12) inset; }
-  #mirrorFrame .chip { position: absolute; top: calc(var(--u) * -3.2); left: calc(var(--u) * 3); background: var(--orange); color: #fff;
-    font-weight: 800; font-size: calc(var(--u) * 3.2); padding: calc(var(--u) * .9) calc(var(--u) * 2.6); border-radius: 99px; }
-  #mirrorFrame .chip i { display: inline-block; width: calc(var(--u) * 1.8); height: calc(var(--u) * 1.8); border-radius: 50%;
-    background: #fff; margin-right: calc(var(--u) * 1.2); animation: blink 1.2s infinite; vertical-align: middle; }
-  @keyframes blink { 50% { opacity: .2; } }
-  #mirrorFrame .lens { position: absolute; right: calc(var(--u) * 2.5); top: calc(var(--u) * 2.5); width: 27%; aspect-ratio: 3 / 4;
+  #idle .sub { font-size: calc(var(--u) * 3.7); color: #e2e6ea; margin-top: calc(var(--u) * 2.5); font-weight: 500; }
+  #media { position: absolute; left: calc(var(--u) * 5); right: calc(var(--u) * 5); top: calc(var(--u) * 65); aspect-ratio: 16 / 9;
+    border-radius: calc(var(--u) * 4); background: #000; box-shadow: 0 calc(var(--u) * 3) calc(var(--u) * 10) rgba(0,0,0,.55); }
+  #media > video { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; }
+  #media .tag { position: absolute; top: calc(var(--u) * -3); left: calc(var(--u) * 3); background: #a3142a; color: #fff;
+    font-weight: 800; font-size: calc(var(--u) * 3.1); padding: calc(var(--u) * .9) calc(var(--u) * 2.6); border-radius: 99px; }
+  #media .lens { position: absolute; right: calc(var(--u) * 2.5); bottom: calc(var(--u) * -12); width: 30%; aspect-ratio: 3 / 4;
     border-radius: calc(var(--u) * 3); overflow: hidden; border: calc(var(--u) * .7) solid #fff; background: #000;
-    box-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 6) rgba(0,0,0,.5); transition: border-color .2s, transform .2s; }
-  #mirrorFrame .lens video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-  #mirrorFrame .lens span { position: absolute; left: 0; right: 0; bottom: 0; text-align: center; font-weight: 800;
-    font-size: calc(var(--u) * 2.8); padding: calc(var(--u) * 1.2); background: rgba(0,0,0,.6); }
-  #mirrorFrame.hit .lens { border-color: var(--green-2); transform: scale(1.06); }
+    box-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 6) rgba(0,0,0,.6); transition: border-color .2s, transform .2s; }
+  #media .lens video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+  #media .lens span { position: absolute; left: 0; right: 0; bottom: 0; text-align: center; font-weight: 800;
+    font-size: calc(var(--u) * 2.6); line-height: 1.15; padding: calc(var(--u) * 1.2); background: rgba(0,0,0,.65); }
+  #media .lens i { position: absolute; top: calc(var(--u) * 1.4); left: calc(var(--u) * 1.4); width: calc(var(--u) * 2); height: calc(var(--u) * 2);
+    border-radius: 50%; background: #ff3b3b; animation: blink 1.2s infinite; }
+  @keyframes blink { 50% { opacity: .2; } }
+  #media.hit .lens { border-color: var(--green-2); transform: scale(1.08); }
   #idle .card { position: absolute; left: calc(var(--u) * 4); right: calc(var(--u) * 4); bottom: calc(var(--u) * 4);
     display: grid; grid-template-columns: auto 1fr; gap: calc(var(--u) * 4); align-items: center;
     background: rgba(255,255,255,.96); color: #1d2024; border-radius: calc(var(--u) * 5); padding: calc(var(--u) * 3.6);
@@ -65,7 +67,7 @@
   #idle li small { display: block; font-size: calc(var(--u) * 3); color: #5d6570; font-weight: 500; margin-top: calc(var(--u) * .6); }
 
   /* ---------- karşılama ---------- */
-  #greet { display: grid; place-items: center; text-align: center; background: rgba(20,22,25,.82); backdrop-filter: blur(6px); }
+  #greet { display: grid; place-items: center; text-align: center; background: rgba(20,22,25,.9); backdrop-filter: blur(6px); }
   #greet .hi { font-size: calc(var(--u) * 9); font-weight: 700; color: #e8ebee; }
   #greet .name { font-size: calc(var(--u) * 18); font-weight: 900; line-height: 1; letter-spacing: -.02em; margin: calc(var(--u) * 1) 0 calc(var(--u) * 5); }
   #greet p { font-size: calc(var(--u) * 5.6); margin: 0; font-weight: 700; }
@@ -91,67 +93,107 @@
   #proc .spin { width: calc(var(--u) * 16); height: calc(var(--u) * 16); margin: 0 auto calc(var(--u) * 4); border-radius: 50%;
     border: calc(var(--u) * 1.4) solid rgba(255,255,255,.15); border-top-color: var(--green-2); border-right-color: var(--blue); animation: spin 0.9s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  #flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+  #flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 20; }
 
-  /* ---------- hikâye ---------- */
+  /* ---------- hikâye: tam genişlikte, bulanık arka planlı bant ---------- */
   #caption .logo { position: absolute; top: calc(var(--u) * 4.5); left: calc(var(--u) * 5); height: calc(var(--u) * 10); opacity: .95; }
-  #caption .box { position: absolute; left: calc(var(--u) * 6); right: calc(var(--u) * 6); bottom: calc(var(--u) * 13); text-align: center; }
-  #caption .kicker { display: inline-block; font-size: calc(var(--u) * 4); font-weight: 800; color: #fff; background: var(--green);
+  #caption .band { position: absolute; left: 0; right: 0; bottom: calc(var(--u) * 11); text-align: center;
+    padding: calc(var(--u) * 4) calc(var(--u) * 6) calc(var(--u) * 4.5);
+    background: linear-gradient(rgba(14,16,19,.80), rgba(14,16,19,.90)); backdrop-filter: blur(14px) saturate(1.2);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    transform: scaleY(0); transform-origin: center; transition: transform .45s cubic-bezier(.3,1,.3,1); }
+  #caption .band::before, #caption .band::after { content: ''; position: absolute; left: 0; right: 0; height: calc(var(--u) * .7); background: var(--grad); }
+  #caption .band::before { top: 0; } #caption .band::after { bottom: 0; }
+  #caption.show .band { transform: none; }
+  #caption .kicker { display: inline-block; font-size: calc(var(--u) * 4.2); font-weight: 800; color: #fff; background: var(--green);
     padding: calc(var(--u) * .9) calc(var(--u) * 3); border-radius: 99px; }
-  #caption .title { font-size: calc(var(--u) * 12); font-weight: 900; line-height: 1; white-space: pre-line; letter-spacing: -.02em;
-    text-shadow: 0 calc(var(--u) * .6) calc(var(--u) * 4) rgba(0,0,0,.85); margin-top: calc(var(--u) * 2.5); }
+  #caption .title { font-size: calc(var(--u) * 11.5); font-weight: 900; line-height: 1.02; white-space: pre-line; letter-spacing: -.02em;
+    margin-top: calc(var(--u) * 2.2); }
   #caption .title .num { color: var(--orange); }
-  #caption .src { position: absolute; bottom: calc(var(--u) * 4); left: 0; right: 0; text-align: center; font-size: calc(var(--u) * 2.4); color: #9aa1aa; }
-  #caption .dots { position: absolute; bottom: calc(var(--u) * 8); left: 0; right: 0; display: flex; justify-content: center; gap: calc(var(--u) * 1.4); }
-  #caption .dots i { width: calc(var(--u) * 1.6); height: calc(var(--u) * 1.6); border-radius: 50%; background: rgba(255,255,255,.25); transition: background .3s, transform .3s; }
-  #caption .dots i.on { background: var(--green-2); transform: scale(1.4); }
-  #caption .item { transition: opacity .5s ease, transform .6s cubic-bezier(.2,1,.3,1); opacity: 0; transform: translateY(calc(var(--u) * 4)); }
+  #caption .item { transition: opacity .45s ease .12s, transform .55s cubic-bezier(.2,1,.3,1) .12s; opacity: 0; transform: translateY(calc(var(--u) * 3)); }
   #caption.show .item { opacity: 1; transform: none; }
-  #caption.show .title { transition-delay: .08s; }
+  #caption .dots { position: absolute; bottom: calc(var(--u) * 6.5); left: 0; right: 0; display: flex; justify-content: center; gap: calc(var(--u) * 1.6); }
+  #caption .dots i { width: calc(var(--u) * 1.8); height: calc(var(--u) * 1.8); border-radius: 50%; background: rgba(255,255,255,.3); transition: background .3s, transform .3s; }
+  #caption .dots i.on { background: var(--green-2); transform: scale(1.4); }
+  #caption .src { position: absolute; bottom: calc(var(--u) * 2.5); left: 0; right: 0; text-align: center; font-size: calc(var(--u) * 2.4); color: #9aa1aa; }
 
-  /* ---------- bitiş ---------- */
-  #end .top { position: absolute; top: calc(var(--u) * 5); left: 0; right: 0; text-align: center; }
+  /* ---------- bitiş: unvan + davetiye ---------- */
+  #end .shade { position: absolute; left: 0; right: 0; bottom: 0; height: 40%; z-index: 0;
+    background: linear-gradient(rgba(20,22,25,0), rgba(20,22,25,.92) 24%, rgba(20,22,25,.98)); }
+  #end .shadeTop { position: absolute; left: 0; right: 0; top: 0; height: 24%; z-index: 0;
+    background: linear-gradient(rgba(20,22,25,.92), rgba(20,22,25,.75) 60%, rgba(20,22,25,0)); }
+  #end .top, #end .bottom { z-index: 2; }
+  #end .top { position: absolute; top: calc(var(--u) * 4); left: 0; right: 0; text-align: center; }
   #end .pre { font-size: calc(var(--u) * 5); color: #e2e6ea; font-weight: 700; }
   #end .arch { font-size: calc(var(--u) * 10.5); white-space: nowrap; font-weight: 900; letter-spacing: .01em; color: var(--arch); line-height: 1.05;
     text-shadow: 0 0 calc(var(--u) * 6) color-mix(in srgb, var(--arch) 55%, transparent); }
   #end .who { font-size: calc(var(--u) * 7); font-weight: 800; }
   #end.on .arch { animation: pop .8s cubic-bezier(.2,1.6,.4,1) both; }
-  #end .shade { position: absolute; left: 0; right: 0; bottom: 0; height: 34%;
-    background: linear-gradient(rgba(20,22,25,0), rgba(20,22,25,.92) 26%, rgba(20,22,25,.98)); }
-  #end .bottom { position: absolute; left: calc(var(--u) * 5); right: calc(var(--u) * 5); bottom: calc(var(--u) * 4.5); }
-  #end .share .head { grid-column: 1 / -1; border-bottom: 1px solid #e3e6ea; padding-bottom: calc(var(--u) * 3); }
-  #end .invite { text-align: center; font-size: calc(var(--u) * 5.6); font-weight: 900; line-height: 1.12; color: #1d2024; }
-  #end .note { text-align: center; color: #5d6570; font-size: calc(var(--u) * 3.4); margin-top: calc(var(--u) * 1.4); }
-  #end .share { display: grid; grid-template-columns: auto 1fr; gap: calc(var(--u) * 4); align-items: center;
-    background: rgba(255,255,255,.96); color: #1d2024; border-radius: calc(var(--u) * 4.5); padding: calc(var(--u) * 3.6); }
-  #end .share .qr { min-width: calc(var(--u) * 24); min-height: calc(var(--u) * 24); display: grid; place-items: center; color: #777; }
-  #end .share canvas { display: block; width: calc(var(--u) * 24); height: calc(var(--u) * 24); image-rendering: pixelated; }
-  #end .share .t { font-size: calc(var(--u) * 5); font-weight: 900; line-height: 1.12; }
-  #end .share .s { font-size: calc(var(--u) * 3.2); color: #5d6570; margin-top: calc(var(--u) * 1.4); }
+  #end .bottom { position: absolute; left: calc(var(--u) * 4); right: calc(var(--u) * 4); bottom: calc(var(--u) * 4); }
+
+  /* Davetiye bileti */
+  .ticket { position: relative; border-radius: calc(var(--u) * 3.6); padding: calc(var(--u) * .7); background: var(--grad);
+    box-shadow: 0 calc(var(--u) * 4) calc(var(--u) * 14) rgba(0,0,0,.6), 0 0 calc(var(--u) * 8) rgba(243,201,105,.25);
+    opacity: 0; transform: perspective(1200px) rotateX(55deg) translateY(30%) scale(.85); }
+  #end.invite .ticket { animation: ticketIn 1s cubic-bezier(.2,1.3,.35,1) forwards; }
+  @keyframes ticketIn { to { opacity: 1; transform: none; } }
+  .ticket .inner { position: relative; display: grid; grid-template-columns: 1fr auto; border-radius: calc(var(--u) * 3); overflow: hidden;
+    background: radial-gradient(120% 140% at 0% 0%, #2a2f38, #15181d 60%); }
+  .ticket .inner::after { /* ışıltı */ content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.22) 48%, rgba(255,240,200,.08) 52%, transparent 65%);
+    transform: translateX(-120%); }
+  #end.invite .ticket .inner::after { animation: sheen 2.8s ease-in-out .9s infinite; }
+  @keyframes sheen { 60%, 100% { transform: translateX(120%); } }
+  .ticket .ribbon { position: absolute; top: calc(var(--u) * -4.6); left: 50%; transform: translateX(-50%); z-index: 3; white-space: nowrap;
+    background: linear-gradient(90deg, #f7d77e, #e7b24a); color: #2b1d00; font-weight: 900; font-size: calc(var(--u) * 4);
+    padding: calc(var(--u) * 1.2) calc(var(--u) * 4.5); border-radius: 99px; box-shadow: 0 calc(var(--u) * 1) calc(var(--u) * 4) rgba(0,0,0,.4); letter-spacing: .02em; }
+  .ticket .main { padding: calc(var(--u) * 5.5) calc(var(--u) * 4) calc(var(--u) * 3.6) calc(var(--u) * 4.5); position: relative; }
+  .ticket .seal { position: absolute; top: calc(var(--u) * 3.6); right: calc(var(--u) * 3); display: flex; gap: calc(var(--u) * 1.2); align-items: center; opacity: .95; }
+  .ticket .seal img { height: calc(var(--u) * 7); }
+  .ticket .kick { padding-right: calc(var(--u) * 17); font-size: calc(var(--u) * 2.6); letter-spacing: .22em; color: var(--gold); font-weight: 800; }
+  .ticket .ttl { font-size: calc(var(--u) * 6); font-weight: 900; line-height: 1.02; margin-top: calc(var(--u) * 1); }
+  .ticket .to { font-size: calc(var(--u) * 3.6); color: #dfe3e8; margin-top: calc(var(--u) * 2.4); line-height: 1.3; }
+  .ticket .to b { color: #fff; }
+  .ticket .meta { display: flex; flex-wrap: wrap; gap: calc(var(--u) * 1.2) calc(var(--u) * 3); margin-top: calc(var(--u) * 2.4);
+    font-size: calc(var(--u) * 3); font-weight: 700; color: #fff; }
+  .ticket .no { margin-top: calc(var(--u) * 2.2); font-size: calc(var(--u) * 2.5); color: var(--muted); letter-spacing: .08em; }
+  .ticket .no b { color: var(--gold); font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .12em; }
+  .ticket .stub { position: relative; width: calc(var(--u) * 30); padding: calc(var(--u) * 5) calc(var(--u) * 3) calc(var(--u) * 3);
+    border-left: calc(var(--u) * .5) dashed rgba(255,255,255,.35); text-align: center; background: rgba(255,255,255,.04); }
+  .ticket .stub::before, .ticket .stub::after { content: ''; position: absolute; left: calc(var(--u) * -2.6); width: calc(var(--u) * 4.6); height: calc(var(--u) * 4.6);
+    border-radius: 50%; background: var(--bg); }
+  .ticket .stub::before { top: calc(var(--u) * -2.3); } .ticket .stub::after { bottom: calc(var(--u) * -2.3); }
+  .ticket .stub .qr { background: #fff; border-radius: calc(var(--u) * 1.6); padding: calc(var(--u) * 1); display: grid; place-items: center; color: #777;
+    width: calc(var(--u) * 24); height: calc(var(--u) * 24); margin: 0 auto; }
+  .ticket .stub canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+  .ticket .stub .scan { font-size: calc(var(--u) * 2.8); font-weight: 800; margin-top: calc(var(--u) * 1.6); line-height: 1.2; }
+  .ticket .stub .dl { font-size: calc(var(--u) * 2.3); color: var(--muted); margin-top: calc(var(--u) * .8); }
   #end .bar { height: calc(var(--u) * 1); background: rgba(255,255,255,.15); border-radius: 99px; margin-top: calc(var(--u) * 3); overflow: hidden; }
   #end .bar i { display: block; height: 100%; width: 100%; background: var(--grad); transform-origin: left; }
+  /* Konfeti */
+  #confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 15; }
+  #confetti i { position: absolute; top: -4vh; width: calc(var(--u) * 1.6); height: calc(var(--u) * 2.6); border-radius: 2px; opacity: .95;
+    animation: fall linear forwards; }
+  @keyframes fall { to { transform: translate(var(--dx), 115vh) rotate(var(--rot)); } }
 
-  /* Yatay ekran: görsel solda, yazılar sağ sütunda */
+  /* Yatay ekran: görsel solda, yazılar sağ sütunda; hikâye bandı her zaman tam ortada */
   @media (min-aspect-ratio: 1/1) {
-    #idle header, #idle .headline, #idle .card, #caption .box, #end .top, #end .bottom { left: 52%; right: 4%; }
+    /* Yatay ekranda birim yüksekliğe göre büyür; sağ sütuna sığacak şekilde sınırlı */
+    :root { --u: min(0.46vw, 0.82vh); }
+    #idle h1 { font-size: calc(var(--u) * 10.5); }
+    #idle .sub { font-size: calc(var(--u) * 3.2); }
+    #idle header .tp { height: calc(var(--u) * 15); } #idle header .iy { height: calc(var(--u) * 12); }
+    #end .arch { font-size: calc(var(--u) * 8.5); }
+    #idle header, #idle .headline, #idle .card, #end .top, #end .bottom { left: 52%; right: 4%; }
     #idle .headline { top: 22vh; text-align: left; }
     #idle .card { bottom: 6vh; }
-    #caption .box { text-align: left; }
+    #media { left: 4%; right: auto; width: 44%; top: 50%; transform: translateY(-60%); }
     #end .top { text-align: left; top: 8vh; }
-    #end .invite, #end .note { text-align: left; }
-    #end .shade { left: 46%; top: 0; height: auto; background: linear-gradient(90deg, rgba(20,22,25,0), rgba(20,22,25,.94) 18%); }
+    #end .shade { left: 46%; top: 0; height: auto; background: linear-gradient(90deg, rgba(20,22,25,0), rgba(20,22,25,.94) 16%); }
+    #end .shadeTop { display: none; }
   }
 
-  /* ---------- tanıtım videosu (köşe) ---------- */
-  #promo { position: fixed; z-index: 5; pointer-events: none; border-radius: calc(var(--u) * 2.6); overflow: hidden; background: #000;
-    border: calc(var(--u) * .5) solid rgba(255,255,255,.9); box-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 6) rgba(0,0,0,.55);
-    aspect-ratio: 16 / 9; opacity: 0; transition: left .9s cubic-bezier(.3,1,.3,1), top .9s cubic-bezier(.3,1,.3,1), width .9s cubic-bezier(.3,1,.3,1), opacity .8s ease; }
-  #promo.on { opacity: 1; }
-  #promo video { width: 100%; height: 100%; object-fit: cover; display: block; }
-  #promo span { position: absolute; left: calc(var(--u) * 1.4); top: calc(var(--u) * 1.4); background: rgba(160,20,40,.92); color: #fff;
-    font-weight: 800; font-size: calc(var(--u) * 2.2); padding: calc(var(--u) * .5) calc(var(--u) * 1.6); border-radius: 99px; }
-
-  #debug { position: fixed; left: 8px; bottom: 8px; font: 12px/1.4 ui-monospace, monospace; color: #8a9099;
+  #debug { position: fixed; left: 8px; bottom: 8px; font: 12px/1.4 ui-monospace, monospace; color: #8a9099; z-index: 30;
     background: rgba(0,0,0,.6); padding: 6px 8px; border-radius: 6px; display: none; white-space: pre; }
   body.debug #debug { display: block; }
   body.debug { cursor: default; }
@@ -168,18 +210,19 @@
   </header>
   <div class="headline">
     <h1>NASIL BİR<br><span class="grad">GİRİŞİMCİSİN?</span></h1>
-    <div class="sub">Testi çöz, portren 3B objelerden doğsun ✨</div>
+    <div class="sub">Testi çöz, sonucunu kameraya göster… gerisi sürpriz! 🎁</div>
   </div>
-  <div id="mirrorFrame">
-    <div class="chip"><i></i>CANLI · Bu sensin!</div>
-    <div class="lens"><video id="camSmall" playsinline muted></video><span>Sonuç QR'ını buraya göster</span></div>
+  <div id="media">
+    <video id="promoVideo" muted playsinline loop preload="auto"></video>
+    <div class="tag">İYTE'yi tanı</div>
+    <div class="lens"><video id="camSmall" playsinline muted></video><i></i><span>Sonuç QR'ını<br>buraya göster</span></div>
   </div>
   <div class="card">
     <div class="qr" id="idleQr"></div>
     <ol>
       <li><b>1</b><span>Bu QR'ı okut<small>8 soru · 1 dakika</small></span></li>
       <li><b>2</b><span>Sonucunu kameraya göster</span></li>
-      <li><b>3</b><span>Portrenin doğuşunu izle!</span></li>
+      <li><b>3</b><span>Sürprize hazır ol!</span></li>
     </ol>
   </div>
 </section>
@@ -188,7 +231,7 @@
   <div>
     <div class="hi">Merhaba,</div>
     <div class="name grad" id="gName"></div>
-    <p>Şimdi kameraya gülümse 📸<small>Fotoğrafını çekip seni 3B objelerle yeniden yaratacağım</small></p>
+    <p>Şimdi kameraya gülümse 📸<small>Fotoğrafını çekiyorum; sonra arkana yaslan ve izle</small></p>
   </div>
 </section>
 
@@ -200,12 +243,12 @@
 </section>
 
 <section class="layer" id="proc">
-  <div><div class="spin"></div><div class="t">Portren objelere dönüşüyor…</div></div>
+  <div><div class="spin"></div><div class="t">Hazırlanıyor…</div></div>
 </section>
 
 <section class="layer" id="caption">
   <img class="logo" src="assets/brand/teknopark-logo-light.png" alt="">
-  <div class="box">
+  <div class="band">
     <div class="item kicker" id="capKicker"></div>
     <div class="item title" id="capTitle"></div>
   </div>
@@ -214,23 +257,37 @@
 </section>
 
 <section class="layer" id="end">
+  <div class="shadeTop"></div>
+  <div class="shade"></div>
   <div class="top">
     <div class="pre">Geleceğin</div>
     <div class="arch" id="eArch"></div>
     <div class="who" id="eWho"></div>
   </div>
-  <div class="shade"></div>
   <div class="bottom">
-    <div class="share">
-      <div class="head"><div class="invite" id="eInvite"></div><div class="note" id="eNote"></div></div>
-      <div class="qr" id="eQr">…</div>
-      <div><div class="t" id="eShareT"></div><div class="s" id="eShareS"></div></div>
+    <div class="ticket">
+      <div class="ribbon">🎉 DAVETİYE KAZANDIN!</div>
+      <div class="inner">
+        <div class="main">
+          <div class="seal"><img src="assets/brand/teknopark-mark.png" alt=""><img src="assets/brand/iyte-logo.png" alt=""></div>
+          <div class="kick">KİŞİYE ÖZEL DAVETİYE</div>
+          <div class="ttl grad" id="tTitle">Teknogirişim Akademisi</div>
+          <div class="to">Sevgili <b id="tName"></b>, girişimcilik yolculuğuna davetlisin.</div>
+          <div class="meta"><span id="tDates"></span><span id="tPlace"></span></div>
+          <div class="no">DAVETİYE NO <b id="tNo"></b></div>
+        </div>
+        <div class="stub">
+          <div class="qr" id="eQr">…</div>
+          <div class="scan" id="eScan">Okut, yerini ayırt</div>
+          <div class="dl" id="eDeadline"></div>
+        </div>
+      </div>
     </div>
     <div class="bar"><i id="eBar"></i></div>
   </div>
 </section>
 
-<div id="promo"><video id="promoVideo" muted playsinline loop preload="auto"></video><span>İYTE'yi tanı</span></div>
+<div id="confetti"></div>
 <div id="flash"></div>
 <div id="debug"></div>
 

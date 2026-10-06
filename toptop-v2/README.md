@@ -42,11 +42,12 @@ cd ~/projects/teknoparkizmir/toptop-v2 && ./start.sh
 - Renkler Teknopark logosundan: yeşil `#74BC20`, mavi `#5C8CC8`, turuncu `#EC7C00`, gri `#586470`.
 - Objeler gerçek 3B: her çizimin silüeti kalınlık ve yuvarlatılmış kenarla kabartılır (`display/js/objects3d.js`).
   Işık ve yansımalar sahnede. İYTE mührü ve Teknopark sembolü de 3B "kahraman" obje olarak uçar.
+- Sürpriz korunur: bekleme ekranı objelerden hiçbir şey göstermez; portre ilk kez deneyim sırasında görülür.
 
 ## Tanıtım videosu
 
-`iyte-tanitim.mp4` bekleme ekranında aynanın köşesinde, deneyim sırasında sağ üst köşede sessiz ve döngüde oynar.
-Her açılışta rastgele bir saniyeden başlar. Portre oluşmadan ~6 sn önce söner; doruk anı ve bitiş ekranı videosuz izlenir.
+`iyte-tanitim.mp4` yalnızca bekleme ekranında, ortadaki büyük çerçevede sessiz ve döngüde oynar.
+Her açılışta rastgele bir saniyeden başlar. Deneyim başlayınca durur, bekleme ekranına dönünce devam eder.
 
 - Ekran hafif kopyayı kullanır: `display/media/iyte-tanitim-540p.mp4`. Yoksa kök dizindeki orijinal dosya denenir.
 - Videolar büyük olduğu için (318 MB) **repoya girmez** (`.gitignore`). Stand bilgisayarına elle kopyalayın.
@@ -59,11 +60,9 @@ Her açılışta rastgele bir saniyeden başlar. Portre oluşmadan ~6 sn önce s
 Süreler `display/config.js` içinde ayarlanır:
 
 1. **Bekleme:**
-   - Dev başlık, testin QR'ı ve 3 adımlık talimat var.
-   - Ortada **canlı obje aynası** var: kamera görüntüsü gerçek zamanlı olarak 3B objelerden oluşan
-     bir mozaiğe dönüşür. Köşedeki gerçek kamera penceresi QR'ı hedeflemek için kullanılır.
+   - Dev başlık, ortada tanıtım videosu, testin QR'ı ve 3 adımlık talimat var ("…gerisi sürpriz!").
+   - Video çerçevesinin köşesindeki gerçek kamera penceresi QR'ı hedeflemek için kullanılır.
    - Kamera sürekli sonuç QR'ı arar. Aynı QR 2 dakika içinde tekrar okutulursa yok sayılır.
-   - QR okununca ayna objeleri dağılarak deneyime geçilir.
 2. **Karşılama (4 sn):** "Merhaba Yusuf! 👋"
 3. **Fotoğraf (5 sn):**
    - Dairesel bir geri sayım ve yüz çerçevesi görünür. Yüz bulununca çerçeve yeşile döner.
@@ -71,14 +70,17 @@ Süreler `display/config.js` içinde ayarlanır:
    - Görüntü işleme 6 saniyede bitmezse, deneyim MediaPipe'sız yedek kırpmayla devam eder.
    - Herhangi bir hazırlık aşaması 25 saniyeyi aşarsa ekran kendiliğinden bekleme ekranına döner (bekçi).
 4. **Gösteri (34 sn):**
-   - Hikâye metinleri `display/js/story.js` içinde.
+   - Hikâye metinleri `display/js/story.js` içinde. Yazılar, objelerin önünde okunsun diye ortalanmış,
+     bulanık arka planlı bir bantta görünür.
    - Objelerin toplanması ve kamera yolu arketipe göre değişir:
      - 🔥 patlayıp geri toplanma
      - ⛰️ aşağıdan tırmanma
      - 🧭 ortadan yol açılması
      - 🗺️ zemindeki haritadan katlanma
      - 🛠️ tek tek yerleşme
-5. **Bitiş (15 sn):** arketip başlığı, Akademi daveti ve paylaşım QR'ı.
+5. **Bitiş (15 sn):** "Geleceğin 🔥 FIRESTARTER girişimcisi Yusuf" unvanı ve ardından konfetiyle gelen
+   **Teknogirişim Akademisi davetiyesi**: kişiye özel davetiye numarası, tarih, yer, son başvuru ve
+   başvuru sayfasına giden QR. Davetiye bilgileri `display/config.js` → `academy`.
 
 ## Telefon testi (`quiz/`)
 
