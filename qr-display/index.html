@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>İYTE Muhafızı</title>
+<style>
+  :root {
+    --bg: #0a0c0b; --panel: #0f1211; --text: #f2f4f3; --muted: #8d9692;
+    --green: #39e66b; --pink: #ff2e63; --line: #1f2623;
+    --u: min(1vw, 1.7778vh);   /* yatay 16:9 ekranda genişliğin 1/100'ü */
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); overflow: hidden; cursor: none;
+    font-family: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  /* Hafif tarama çizgileri */
+  body::after { content: ''; position: fixed; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px); }
+  .frame { position: absolute; inset: calc(var(--u) * 2.4); display: grid; grid-template-columns: 1fr calc(var(--u) * 30);
+    grid-template-rows: auto 1fr auto; gap: calc(var(--u) * 1.6) calc(var(--u) * 4); }
+
+  header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--line); padding-bottom: calc(var(--u) * 1.6); }
+  h1 { margin: 0; font-size: calc(var(--u) * 3.6); letter-spacing: .14em; font-weight: 800; }
+  h1 .m { color: var(--pink); }
+  h1 .v { color: var(--text); }
+  h1 .cur { display: inline-block; width: .55em; height: 1em; background: var(--green); vertical-align: -.12em; margin-left: .2em; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .status { border: 1px solid var(--green); color: var(--green); font-size: calc(var(--u) * 1); letter-spacing: .15em;
+    padding: calc(var(--u) * .5) calc(var(--u) * 1.2); }
+  .status::before { content: '●'; margin-right: .6em; animation: blink 1.4s steps(1) infinite; }
+
+  ol { list-style: none; margin: 0; padding: 0; align-self: center; display: grid; gap: calc(var(--u) * 3.2); }
+  li { display: grid; grid-template-columns: calc(var(--u) * 4.6) 1fr; gap: calc(var(--u) * 2.4); align-items: center;
+    font-size: calc(var(--u) * 1.75); line-height: 1.55; font-weight: 600; text-transform: uppercase; letter-spacing: .02em; }
+  li .n { display: grid; place-items: center; width: calc(var(--u) * 4.6); height: calc(var(--u) * 4.6);
+    border: calc(var(--u) * .2) solid var(--green); color: var(--green); font-weight: 800; font-size: calc(var(--u) * 1.9); }
+  .hl { color: var(--pink); text-decoration: underline; text-decoration-thickness: calc(var(--u) * .18); text-underline-offset: .22em; }
+
+  aside { align-self: center; display: grid; gap: calc(var(--u) * 1.6); justify-items: center; }
+  .scan { font-size: calc(var(--u) * 1); color: var(--green); letter-spacing: .2em; border: 1px solid var(--line); padding: calc(var(--u) * .4) calc(var(--u) * 1); }
+  .qr { background: #fff; padding: calc(var(--u) * 1); width: calc(var(--u) * 20); }
+  .qr canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+  .gifts { width: 100%; border: 1px solid var(--pink); background: var(--panel); }
+  .gifts h2 { margin: 0; background: var(--pink); color: #fff; text-align: center; font-size: calc(var(--u) * 1.3);
+    letter-spacing: .2em; padding: calc(var(--u) * .7); }
+  .gifts div { display: flex; justify-content: space-between; gap: calc(var(--u) * 1); font-size: calc(var(--u) * 1.15);
+    padding: calc(var(--u) * .9) calc(var(--u) * 1.4); border-top: 1px dashed var(--line); text-transform: uppercase; }
+  .gifts div:first-of-type { border-top: 0; }
+  .gifts b { color: var(--green); font-weight: 700; }
+
+  footer { grid-column: 1 / -1; text-align: center; color: var(--muted); font-size: calc(var(--u) * 1); letter-spacing: .25em;
+    border-top: 1px solid var(--line); padding-top: calc(var(--u) * 1.2); line-height: 1.8; }
+  footer .h { color: var(--pink); }
+</style>
+</head>
+<body>
+<div class="frame">
+  <header>
+    <h1>İYTE <span class="m">MUHAFIZI</span> <span class="v">V1.0</span><span class="cur"></span></h1>
+    <div class="status">SİSTEM AKTİF</div>
+  </header>
+
+  <ol>
+    <li><span class="n">01</span><span><span class="hl">Muhafız V1.0</span> ile tanış. Tek görevi gizli bir parolayı korumak olan Llama tabanlı bir yapay zekâ.</span></li>
+    <li><span class="n">02</span><span>QR kodu okutarak terminal arayüzünü <span class="hl">kendi telefonundan</span> aç.</span></li>
+    <li><span class="n">03</span><span>Onunla konuş: <span class="hl">Prompt Injection</span> veya <span class="hl">Sosyal Mühendislik</span> kullanarak parolayı al.</span></li>
+    <li><span class="n">04</span><span>Parolayı aldığın an adın <span class="hl">skor tablosunda</span> yayınlanacak.</span></li>
+  </ol>
+
+  <aside>
+    <div class="scan">SCAN_TO_ACCESS</div>
+    <div class="qr" id="qr"></div>
+    <section class="gifts" id="gifts"><h2>SÜRPRİZ HEDİYELER</h2></section>
+  </aside>
+
+  <footer>TEKNOPARK İZMİR <span class="h">♥</span> İYTE<br>BİRLİKTE DAHA GÜÇLÜYÜZ</footer>
+</div>
+
+<script src="vendor/qrcode.js"></script>
+<script src="config.js"></script>
+<script>
+  const cfg = window.MUHAFIZ;
+  // QR
+  const qr = window.qrcode(0, 'M');
+  qr.addData(cfg.url, 'Byte'); qr.make();
+  const n = qr.getModuleCount(), cell = 10, q = 1;
+  const c = document.createElement('canvas');
+  c.width = c.height = (n + q * 2) * cell;
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.fillStyle = '#000';
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (qr.isDark(r, k)) g.fillRect((k + q) * cell, (r + q) * cell, cell, cell);
+  document.getElementById('qr').appendChild(c);
+  // Hediyeler
+  const box = document.getElementById('gifts');
+  for (const it of cfg.gifts) {
+    const row = document.createElement('div');
+    const a = document.createElement('span'); a.textContent = it.rank;
+    const b = document.createElement('b'); b.textContent = it.gift;
+    row.append(a, b); box.appendChild(row);
+  }
+  addEventListener('keydown', (e) => { if (e.key === 'f' || e.key === 'F') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); });
+</script>
+</body>
+</html>
