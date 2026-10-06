@@ -189,6 +189,8 @@ async function start(data) {
     target = fallbackPortrait(shot, { mirror: true });
   }
   if (session !== s) return;
+  // Bitiş ekranındaki polaroid için kırpılmış aslı sakla.
+  try { s.photo = target.color.toDataURL('image/jpeg', 0.85); } catch { s.photo = ''; }
   let analysis;
   try { analysis = analyzeTarget(target, 1200); } catch (e) {
     console.error(e); analysis = analyzeTarget(fallbackPortrait(shot, { mirror: true }), 1200);
@@ -350,6 +352,7 @@ function enterEnd() {
   setState('end');
   const s = session, a = s.arch, ac = CONFIG.academy;
   $('eArch').textContent = `${a.emoji} ${a.name}`;
+  $('ePhoto').src = s.photo || '';
   $('eWho').textContent = `girişimcisi ${s.name}`;
   $('tTitle').textContent = ac.title;
   $('tName').textContent = s.name;
