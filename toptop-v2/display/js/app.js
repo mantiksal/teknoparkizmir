@@ -11,7 +11,7 @@ import { preparePortrait, fallbackPortrait, HeadTracker } from './vision.js';
 import { ARCHETYPES, ORDER } from '../../quiz/quiz-data.js';
 import { decodeToken } from '../../quiz/token.js';
 import { CONFIG } from '../config.js';
-import { SCENES, SOURCE_NOTE, ASSEMBLE, ALIGN_AT } from './story.js';
+import { SCENES, STATEMENTS, ASSEMBLE, ALIGN_AT } from './story.js';
 import { CameraPath } from './camera-path.js';
 import { QRScanner } from './scanner.js';
 import { composeCard, uploadCard } from './share.js';
@@ -135,7 +135,7 @@ async function startPromo() {
 let state = 'boot', stateSince = 0;
 function setState(s) { state = s; stateSince = performance.now() / 1000; }
 let sprites = [];
-const layers = ['idle', 'greet', 'capture', 'proc', 'caption', 'end'];
+const layers = ['idle', 'greet', 'capture', 'proc', 'caption', 'say', 'end'];
 function showLayer(...on) { for (const id of layers) $(id).classList.toggle('on', on.includes(id)); }
 
 function enterIdle() {
@@ -204,10 +204,11 @@ async function start(data) {
   const C = new THREE.Vector3(ana.portrait.x, ana.portrait.y, 0).sub(E).multiplyScalar(1.4).add(E);
   s.path = new CameraPath(data.archetype, E, C, H, ALIGN_AT, FINAL_FOV);
   s.t0 = performance.now() / 1000;
-  s.scene = -1;
+  s.scene = -1; s.stmt = -1;
+  $('sayBox').innerHTML = ''; $('say').classList.remove('out');
   $('capDots').innerHTML = SCENES.map(() => '<i></i>').join('');
   setState('show');
-  showLayer('caption');
+  showLayer('caption', 'say');
 }
 
 async function capturePhoto() {
@@ -301,9 +302,27 @@ function updateShow(now) {
         if (session !== s) return;
         $('capKicker').textContent = fill(sc.kicker);
         setTitle($('capTitle'), fill(sc.title));
-        $('capSrc').textContent = sc.source ? SOURCE_NOTE : '';
         cap.classList.add('show');
       }, 280);
+    }
+  }
+  // Ortadaki cümleler (bilgilendirme bittikten sonra)
+  const si = STATEMENTS.findIndex((st) => t >= st.t0 && t < st.t1);
+  if (si !== s.stmt) {
+    s.stmt = si;
+    const say = $('say'), box = $('sayBox');
+    if (si < 0) { say.classList.add('out'); }
+    else {
+      const st = STATEMENTS[si];
+      say.classList.remove('out');
+      box.className = 'say' + (st.big ? ' big' : '');
+      let k = 0;
+      box.innerHTML = st.lines.map((ln) => {
+        const base = ln.delay || 0;
+        const words = ln.text.replace('{name}', s.name || 'sen').split(' ');
+        return `<span class="ln${ln.grad ? ' grad' : ''}">` + words.map((w, i) =>
+          `<span class="w" style="animation-delay:${(base + (k++, i) * 0.16).toFixed(2)}s">${escapeHtml(w)}</span>`).join(' ') + '</span>';
+      }).join('');
     }
   }
   if (cam.aligned && !s.flashed) { s.flashed = true; flash(0.55, 1.4); }
@@ -434,7 +453,7 @@ addEventListener('keydown', (e) => {
   } else if (e.key === 'Escape' && state !== 'idle') enterIdle();
 });
 window.__start = start;   // otomatik test için
-window.__dbg = { ana, camera, E, get state() { return state; } };
+window.__dbg = { ana, camera, E, get state() { return state; }, showT0: () => session?.t0 ?? 0 };
 
 // ------------------------------------------------------------------ başlat
 

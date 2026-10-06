@@ -115,7 +115,20 @@
   #caption .dots { position: absolute; bottom: calc(var(--u) * 6.5); left: 0; right: 0; display: flex; justify-content: center; gap: calc(var(--u) * 1.6); }
   #caption .dots i { width: calc(var(--u) * 1.8); height: calc(var(--u) * 1.8); border-radius: 50%; background: rgba(255,255,255,.3); transition: background .3s, transform .3s; }
   #caption .dots i.on { background: var(--green-2); transform: scale(1.4); }
-  #caption .src { position: absolute; bottom: calc(var(--u) * 2.5); left: 0; right: 0; text-align: center; font-size: calc(var(--u) * 2.4); color: #9aa1aa; }
+  /* Ortadaki büyük cümleler: kelime kelime, bulanıktan nete */
+  #say { display: grid; place-items: center; text-align: center; padding: 0 calc(var(--u) * 6);
+    background: radial-gradient(60% 40% at 50% 50%, rgba(14,16,19,.72), rgba(14,16,19,0) 75%); }
+  #say .say { max-width: 100%; }
+  #say .ln { display: block; font-size: calc(var(--u) * 8); font-weight: 800; line-height: 1.12; letter-spacing: -.01em;
+    text-shadow: 0 0 calc(var(--u) * 3) rgba(0,0,0,.9), 0 calc(var(--u) * .5) calc(var(--u) * 2) rgba(0,0,0,.8); }
+  #say .big .ln { font-size: calc(var(--u) * 12.5); font-weight: 900; line-height: 1.02; }
+  #say .big .ln + .ln { font-size: calc(var(--u) * 9); margin-top: calc(var(--u) * 2); }
+  #say .ln.grad { text-shadow: none; filter: drop-shadow(0 0 calc(var(--u) * 3) rgba(0,0,0,.85)); }
+  #say .w { display: inline-block; opacity: 0; filter: blur(12px); transform: translateY(calc(var(--u) * 2)) scale(1.08);
+    animation: wordIn .7s cubic-bezier(.2,1,.3,1) forwards; }
+  #say .ln.grad .w { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  @keyframes wordIn { to { opacity: 1; filter: none; transform: none; } }
+  #say.out .say { transition: opacity .6s, transform .6s, filter .6s; opacity: 0; transform: scale(1.06); filter: blur(8px); }
 
   /* ---------- bitiş: unvan + davetiye ---------- */
   #end .shade { position: absolute; left: 0; right: 0; bottom: 0; height: 40%; z-index: 0;
@@ -253,8 +266,9 @@
     <div class="item title" id="capTitle"></div>
   </div>
   <div class="dots" id="capDots"></div>
-  <div class="src" id="capSrc"></div>
 </section>
+
+<section class="layer" id="say"><div class="say" id="sayBox"></div></section>
 
 <section class="layer" id="end">
   <div class="shadeTop"></div>
@@ -270,7 +284,6 @@
       <div class="inner">
         <div class="main">
           <div class="seal"><img src="assets/brand/teknopark-mark.png" alt=""><img src="assets/brand/iyte-logo.png" alt=""></div>
-          <div class="kick">KİŞİYE ÖZEL DAVETİYE</div>
           <div class="ttl grad" id="tTitle">Teknogirişim Akademisi</div>
           <div class="to">Sevgili <b id="tName"></b>, girişimcilik yolculuğuna davetlisin.</div>
           <div class="meta"><span id="tDates"></span><span id="tPlace"></span></div>
