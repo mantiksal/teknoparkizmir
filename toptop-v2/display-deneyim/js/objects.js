@@ -390,6 +390,53 @@ const DRAW = {
   },
 };
 
+// ------------------------------------------------------------ 🚀 uzay
+DRAW.spaceRocket = (g) => DRAW.rocket(g);
+DRAW.planet = (g) => {
+  // Halkanın arka yarısı, gezegen, halkanın ön yarısı
+  g.save(); g.translate(128, 128); g.rotate(-0.35);
+  g.beginPath(); g.ellipse(0, 0, 120, 34, 0, Math.PI, TAU); stroke(g, A(), 16);
+  g.restore();
+  circle(g, 128, 128, 72); fill(g, T());
+  g.save(); circle(g, 128, 128, 72); g.clip();
+  g.fillStyle = A(); g.fillRect(40, 108, 180, 16); g.fillRect(40, 150, 180, 10);
+  g.restore();
+  g.beginPath(); g.arc(128, 128, 52, Math.PI * 1.1, Math.PI * 1.45); stroke(g, F(1), 9);
+  g.save(); g.translate(128, 128); g.rotate(-0.35);
+  g.beginPath(); g.ellipse(0, 0, 120, 34, 0, 0, Math.PI); stroke(g, F(0.9), 16);
+  g.restore();
+};
+DRAW.satellite = (g) => {
+  g.save(); g.translate(128, 128); g.rotate(-0.5);
+  for (const x of [-118, 38]) {
+    rrect(g, x, -26, 80, 52, 4); fill(g, A());
+    for (let k = 1; k < 4; k++) line(g, [[x + k * 20, -26], [x + k * 20, 26]], F(0.75), 3);
+    line(g, [[x, 0], [x + 80, 0]], F(0.75), 3);
+  }
+  g.fillStyle = F(0.5); g.fillRect(-40, -5, 80, 10);
+  rrect(g, -30, -40, 60, 80, 8); fill(g, T());
+  g.beginPath(); g.arc(0, -40, 26, Math.PI, TAU); fill(g, F(0.92));
+  line(g, [[0, -66], [0, -86]], F(0.4), 5); circle(g, 0, -88, 6); fill(g, F(0.4));
+  g.restore();
+};
+DRAW.telescope = (g) => {
+  line(g, [[118, 150], [70, 240]], F(0.35), 9); line(g, [[128, 150], [128, 244]], F(0.35), 9); line(g, [[138, 150], [186, 240]], F(0.35), 9);
+  g.save(); g.translate(128, 120); g.rotate(-0.42);
+  rrect(g, -110, -24, 180, 48, 10); fill(g, T());
+  rrect(g, 64, -32, 46, 64, 8); fill(g, A());
+  g.fillStyle = F(0.9); g.fillRect(-60, -24, 10, 48); g.fillRect(20, -24, 10, 48);
+  rrect(g, -124, -14, 18, 28, 4); fill(g, F(0.3));
+  g.restore();
+};
+DRAW.star = (g) => {
+  const pts = [];
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 50 : 118; pts.push([128 + Math.cos(a) * r, 136 + Math.sin(a) * r]); }
+  poly(g, pts); fill(g, T());
+  const inner = pts.map(([x, y]) => [128 + (x - 128) * 0.55, 136 + (y - 136) * 0.55]);
+  poly(g, inner); fill(g, A());
+  line(g, [[96, 92], [118, 70]], F(1), 8);
+};
+
 function formula(s, size) {
   return (g) => {
     rrect(g, 22, 22, 212, 212, 26); fill(g, T());
@@ -421,11 +468,13 @@ DRAW.teknoparkLogo = badge(['TEKNOPARK', 'İZMİR'], [34, 44]);
 const CATALOG = [
   ['book', 'Kitap', 'acad', 'block', 3], ['books', 'Kitaplar', 'acad', 'block', 2], ['openBook', 'Açık kitap', 'acad', 'block', 2],
   ['mortarboard', 'Mezuniyet kepi', 'acad', 'other', 2], ['flask', 'Erlenmayer', 'acad', 'other', 2], ['testTubes', 'Deney tüpleri', 'acad', 'other', 1.2],
-  ['atom', 'Atom', 'acad', 'round', 2], ['bulb', 'Ampul', 'acad', 'round', 1.5], ['gear', 'Dişli', 'acad', 'round', 1.5],
+  ['atom', 'Atom', 'acad', 'round', 2], ['gear', 'Dişli', 'acad', 'round', 1.5],
   ['dna', 'DNA', 'acad', 'long', 1.5], ['magnifier', 'Büyüteç', 'acad', 'round', 1.5], ['pencil', 'Kalem', 'acad', 'long', 2],
   ['ruler', 'Cetvel', 'acad', 'long', 1.5], ['setSquare', 'Gönye', 'acad', 'other', 1], ['globe', 'Küre', 'acad', 'round', 1.5],
   ['microscope', 'Mikroskop', 'acad', 'other', 1.5], ['scroll', 'Diploma', 'acad', 'other', 1.2], ['laptop', 'Laptop', 'acad', 'block', 1.5],
   ['turbine', 'Rüzgar türbini', 'acad', 'other', 1.2], ['chip', 'Çip', 'acad', 'block', 1.2], ['calculator', 'Hesap makinesi', 'acad', 'block', 1],
+  ['spaceRocket', 'Roket', 'acad', 'other', 2], ['planet', 'Gezegen', 'acad', 'round', 2], ['satellite', 'Uydu', 'acad', 'other', 1.5],
+  ['telescope', 'Teleskop', 'acad', 'long', 1.2], ['star', 'Yıldız', 'acad', 'round', 1.5],
   ['pi', 'π', 'acad', 'block', 1], ['sigma', 'Σ', 'acad', 'block', 0.7], ['integral', '∫', 'acad', 'block', 0.7],
   ['emc2', 'E=mc²', 'acad', 'block', 1], ['sqrt', '√x', 'acad', 'block', 0.7],
 
