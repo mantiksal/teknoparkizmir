@@ -1,9 +1,11 @@
 #!/bin/sh
-# Stand ekranını (2. monitör) başlatır: http://localhost:8001/display/
-# Telefon testi GitHub Pages'te yayında; yerelde de http://localhost:8001/quiz/ adresinden denenebilir.
+# Stand ekranlarını yerelde sunar:
+#   2. monitör (deneyim): http://localhost:8001/display-deneyim/
+#   1. monitör (Muhafız):  http://localhost:8001/display-muhafiz/
+#   Telefon testi:         http://localhost:8001/quiz-girisimci/
 cd "$(dirname "$0")"
 PORT=${PORT:-8001}
-URL="http://localhost:$PORT/display/"
+URL="http://localhost:$PORT/display-deneyim/"
 
 if lsof -nP -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
   echo "Port $PORT zaten kullanımda — sunucu muhtemelen başka bir terminalde açık."
