@@ -478,7 +478,7 @@ const CATALOG = [
   ['pi', 'π', 'acad', 'block', 1], ['sigma', 'Σ', 'acad', 'block', 0.7], ['integral', '∫', 'acad', 'block', 0.7],
   ['emc2', 'E=mc²', 'acad', 'block', 1], ['sqrt', '√x', 'acad', 'block', 0.7],
 
-  ['rocket', 'Roket', 'firestarter', 'other', 2], ['lightning', 'Şimşek', 'firestarter', 'long', 1.5], ['flame', 'Kibrit alevi', 'firestarter', 'other', 1.5],
+  ['rocket', 'Roket', 'firestarter', 'other', 2], ['lightning', 'Şimşek', 'firestarter', 'long', 1.5],
   ['stopwatch', 'Kronometre', 'firestarter', 'round', 1.5], ['powerButton', 'Başlat düğmesi', 'firestarter', 'round', 1.2], ['dice', 'Zar', 'firestarter', 'block', 1.2],
 
   ['mountain', 'Dağ', 'mountaineer', 'other', 2], ['flag', 'Zirve bayrağı', 'mountaineer', 'other', 1.5], ['ladder', 'Merdiven', 'mountaineer', 'other', 1.2],
