@@ -270,7 +270,7 @@ function flash(strength = 1, dur = 0.8) {
   requestAnimationFrame(() => requestAnimationFrame(() => { f.style.transition = `opacity ${dur}s`; f.style.opacity = 0; }));
 }
 
-/** Başlıktaki sayıları 0'dan sayarak yaz (ör. "237 firma"). */
+/** Başlıktaki sayıları 0'dan sayarak yaz (ör. "254 firma"). */
 function setTitle(el, text) {
   const parts = text.split(/(\d[\d.,]*)/);
   el.innerHTML = parts.map((p, i) => (i % 2 ? `<span class="num" data-v="${p}">0</span>` : p.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])))).join('');
