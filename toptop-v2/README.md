@@ -13,6 +13,18 @@
 Perspektif takibi yok. Anamorfoz etkisini sanal kamera üretiyor, böylece standın önündeki
 herkes aynı anı birlikte görüyor.
 
+## Yayındaki adresler (GitHub Pages)
+
+| Ekran | Adres |
+|---|---|
+| Telefon testi | https://mantiksal.github.io/teknoparkizmir/quiz-girisimci/ |
+| 2. monitör (deneyim) | https://mantiksal.github.io/teknoparkizmir/display-deneyim/ |
+| 1. monitör (İYTE Muhafızı) | https://mantiksal.github.io/teknoparkizmir/display-muhafiz/ |
+
+`main` dalına her push'ta `.github/workflows/pages.yml` siteyi yeniden yayınlar (1–2 dk).
+Ekranlar yayından da açılabilir (kamera izni HTTPS'te çalışır), ama standda internet kesintisine karşı
+yerelden açmak daha güvenlidir.
+
 ## Çalıştırma (stand bilgisayarı)
 
 ```sh
