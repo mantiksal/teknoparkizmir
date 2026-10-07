@@ -44,10 +44,10 @@
   .gifts { width: 100%; border: 1px solid var(--pink); background: var(--panel); }
   .gifts h2 { margin: 0; background: var(--pink); color: #fff; text-align: center; font-size: calc(var(--u) * 1.3);
     letter-spacing: .2em; padding: calc(var(--u) * .7); }
-  .gifts div { display: flex; justify-content: space-between; gap: calc(var(--u) * 1); font-size: calc(var(--u) * 1.15);
-    padding: calc(var(--u) * .9) calc(var(--u) * 1.4); border-top: 1px dashed var(--line); text-transform: uppercase; }
-  .gifts div:first-of-type { border-top: 0; }
-  .gifts b { color: var(--green); font-weight: 700; }
+  .gifts p { margin: 0; padding: calc(var(--u) * 1.6) calc(var(--u) * 1.6) calc(var(--u) * 1.8); text-align: center;
+    font-size: calc(var(--u) * 1.5); line-height: 1.5; font-weight: 700; text-transform: uppercase; }
+  .gifts p::before { content: '🎁'; display: block; font-size: calc(var(--u) * 2.6); margin-bottom: calc(var(--u) * .6); }
+  .gifts b { color: var(--green); }
 
   footer { grid-column: 1 / -1; text-align: center; color: var(--muted); font-size: calc(var(--u) * 1); letter-spacing: .25em;
     border-top: 1px solid var(--line); padding-top: calc(var(--u) * 1.2); line-height: 1.8; }
@@ -91,14 +91,12 @@
   g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.fillStyle = '#000';
   for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (qr.isDark(r, k)) g.fillRect((k + q) * cell, (r + q) * cell, cell, cell);
   document.getElementById('qr').appendChild(c);
-  // Hediyeler
-  const box = document.getElementById('gifts');
-  for (const it of cfg.gifts) {
-    const row = document.createElement('div');
-    const a = document.createElement('span'); a.textContent = it.rank;
-    const b = document.createElement('b'); b.textContent = it.gift;
-    row.append(a, b); box.appendChild(row);
+  // Sürpriz hediyeler: {…} içindeki kısım yeşil vurgulu
+  const p = document.createElement('p');
+  for (const [i, part] of cfg.gift.split(/[{}]/).entries()) {
+    const el = document.createElement(i % 2 ? 'b' : 'span'); el.textContent = part; p.appendChild(el);
   }
+  document.getElementById('gifts').appendChild(p);
   addEventListener('keydown', (e) => { if (e.key === 'f' || e.key === 'F') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); });
 </script>
 </body>
