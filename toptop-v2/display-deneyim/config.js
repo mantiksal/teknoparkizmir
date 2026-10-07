@@ -1,7 +1,7 @@
 // Stand ekranı ayarları. Etkinlik öncesi buradan düzenleyin.
 export const CONFIG = {
   // Telefon testinin adresi (GitHub Pages). Bekleme ekranındaki QR buraya gider.
-  quizUrl: 'https://mantiksal.github.io/teknoparkizmir/',
+  quizUrl: 'https://mantiksal.github.io/teknoparkizmir/quiz-girisimci/',
 
   // Portre paylaşımı. provider: 'none' iken bitiş ekranındaki QR teste davet eder.
   // 'supabase' için: herkese açık bir storage bucket + anon anahtarla yükleme izni.
@@ -20,7 +20,7 @@ export const CONFIG = {
 
   // Tanıtım videosu: sessiz, döngüde, her açılışta rastgele bir saniyeden başlar.
   // İlk dosya yoksa ikincisi denenir. null yaparsanız video gösterilmez.
-  promoVideo: ['media/iyte-tanitim-540p.mp4', '../iyte-tanitim.mp4'],   // yalnızca bekleme ekranında
+  promoVideo: ['media/iyte-tanitim-1080p.mp4', 'media/iyte-tanitim-540p.mp4', '../iyte-tanitim.mp4'],   // yalnızca bekleme ekranında
 
   // Portredeki obje sayısı: arttıkça ayrıntı artar, kare hızı düşer.
   // Stand bilgisayarında D tuşuyla fps'e bakın; 30'un altındaysa düşürün (ör. 1600).

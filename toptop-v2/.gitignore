@@ -2,3 +2,5 @@
 __test/
 # Tanıtım videosu büyük (>100 MB sınırı) — repoya girmez; README: Tanıtım videosu
 *.mp4
+# Yayında kullanılan 1080p kopya (82 MB, GitHub'ın 100 MB sınırının altında) repoda
+!display-deneyim/media/iyte-tanitim-1080p.mp4
