@@ -272,22 +272,7 @@ function flash(strength = 1, dur = 0.8) {
 
 /** Başlıktaki sayıları 0'dan sayarak yaz (ör. "254 firma"). */
 function setTitle(el, text) {
-  const parts = text.split(/(\d[\d.,]*)/);
-  el.innerHTML = parts.map((p, i) => (i % 2 ? `<span class="num" data-v="${p}">0</span>` : p.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])))).join('');
-  const nums = [...el.querySelectorAll('.num')];
-  const t0 = performance.now();
-  const tick = () => {
-    const k = ease(clamp((performance.now() - t0) / 1100, 0, 1));
-    for (const n of nums) {
-      const raw = n.dataset.v;
-      if (k >= 1) { n.textContent = raw; continue; }
-      const [intPart] = raw.split(',');
-      const v = Math.round(+intPart.replace(/\./g, '') * k);
-      n.textContent = intPart.includes('.') ? v.toLocaleString('tr-TR') : String(v);
-    }
-    if (k < 1) requestAnimationFrame(tick);
-  };
-  tick();
+  el.innerHTML = text.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 }
 
 function updateShow(now) {
