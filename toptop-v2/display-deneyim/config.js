@@ -27,7 +27,7 @@ export const CONFIG = {
   portraitObjects: 2200,
 
   // Süreler (saniye)
-  greet: 2.5,
+  greet: 1.25,
   countdown: 3,
   show: 28.5,       // Teknopark hikâyesi + cümleler + obje şovu + portrenin oluşması
   end: 30,        // unvan + davetiye (QR okutma süresi)
