@@ -270,7 +270,7 @@ function flash(strength = 1, dur = 0.8) {
   requestAnimationFrame(() => requestAnimationFrame(() => { f.style.transition = `opacity ${dur}s`; f.style.opacity = 0; }));
 }
 
-/** Başlıktaki sayıları 0'dan sayarak yaz (ör. "254 firma"). */
+/** Bilgi başlığını yaz (sayılar doğrudan, sayaçsız). */
 function setTitle(el, text) {
   el.innerHTML = text.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 }
