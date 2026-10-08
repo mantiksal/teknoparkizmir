@@ -20,11 +20,11 @@ export const STATEMENTS = [
   ] },
 ];
 
-// 3) Cümleler bitince çekilen fotoğraf köşeye "yapışır" (STICK_AT).
+// 3) Çekilen fotoğraf gösterinin başında köşeye "yapışır" (STICK_AT) ve sonuna kadar kalır.
 // 4) Sonra portre kurulur: objeler dağınık buluttan tek tek, giderek hızlanarak
 // yerlerine uçar (BUILD.t0'dan itibaren span saniye). Kamera akışına devam eder,
 // CAMERA_BLEND'den itibaren yumuşakça sihirli noktaya karışır ve ALIGN_AT'te tam oturur.
-export const STICK_AT = 24.3;
+export const STICK_AT = 0;   // çekimden hemen sonra; gösteri boyunca ilgiyi üzerinde tutar
 export const BUILD = { t0: 25.2, span: 6.5 };
 export const CAMERA_BLEND = 22.5;
 export const ALIGN_AT = 32.2;
