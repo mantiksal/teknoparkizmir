@@ -164,6 +164,11 @@
   #sticker.on .polaroid { animation: stick .7s cubic-bezier(.3,1.5,.5,1) forwards; }
   @keyframes stick { to { opacity: 1; transform: rotate(-7deg) scale(1); } }
 
+  /* Portre oturunca altında beliren ipucu */
+  #squint { position: fixed; left: 0; right: 0; top: 66%; text-align: center; pointer-events: none; z-index: 13;
+    font-size: calc(var(--u) * 3.4); font-weight: 700; color: #f1f3f5; text-shadow: 0 2px calc(var(--u) * 2) rgba(0,0,0,.8);
+    opacity: 0; transform: translateY(calc(var(--u) * 2)); transition: opacity .8s, transform .8s; }
+  #squint.on { opacity: .92; transform: none; }
   /* Davetiye bileti */
   .ticket { position: relative; border-radius: calc(var(--u) * 3.6); padding: calc(var(--u) * .7); background: var(--grad);
     box-shadow: 0 calc(var(--u) * 4) calc(var(--u) * 14) rgba(0,0,0,.6), 0 0 calc(var(--u) * 8) rgba(243,201,105,.25);
@@ -223,6 +228,7 @@
     #end .top { text-align: left; top: 8vh; }
     #end .shade { left: 46%; top: 0; height: auto; background: linear-gradient(90deg, rgba(20,22,25,0), rgba(20,22,25,.94) 16%); }
     #end .shadeTop { display: none; }
+    #squint { top: auto; bottom: 2.5vh; left: 0; right: auto; width: 56%; }
     #sticker .polaroid { left: calc(var(--u) * 6); top: calc(var(--u) * 20); width: calc(var(--u) * 19); }
   }
 
@@ -318,6 +324,7 @@
   </div>
 </section>
 
+<div id="squint">Gözlerini kısarak bak :)</div>
 <div id="sticker"><div class="polaroid"><img id="ePhoto" alt=""><b>Sen 🙂</b></div></div>
 <div id="confetti"></div>
 <div id="flash"></div>

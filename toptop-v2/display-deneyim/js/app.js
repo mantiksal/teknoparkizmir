@@ -146,6 +146,7 @@ function enterIdle() {
   ana.group.visible = false;
   $('idle').classList.remove('hit');
   $('sticker').classList.remove('on');
+  $('squint').classList.remove('on');
   $('end').classList.remove('invite');
   showLayer('idle');
   if (promoVideo.src) promoVideo.play().catch(() => {});
@@ -328,7 +329,7 @@ function updateShow(now) {
   }
   // Fotoğraf kurulmadan önce köşeye yapışır ve bitiş ekranında da kalır.
   if (t >= STICK_AT && !s.stuck) { s.stuck = true; $('ePhoto').src = s.photo || ''; $('sticker').classList.add('on'); }
-  if (cam.aligned && !s.flashed) { s.flashed = true; flash(0.55, 1.4); }
+  if (cam.aligned && !s.flashed) { s.flashed = true; flash(0.55, 1.4); setTimeout(() => { if (session === s) $('squint').classList.add('on'); }, 600); }
   if (t >= CONFIG.show) enterEnd();
 }
 
